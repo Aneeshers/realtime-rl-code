@@ -1,0 +1,23 @@
+name: flat_pack_clock
+registered_version: FlatPackClock-v0
+
+training:
+    num_epochs: 1000
+    num_learner_steps_per_epoch: 100
+    n_steps: 20
+    total_batch_size: 128
+
+evaluation:
+    eval_total_batch_size: 100
+    greedy_eval_total_batch_size: 100
+
+az:
+    num_simulations: 32
+    gumbel_scale: 1.0
+    discount_factor: 0.99
+    learning_rate: 3e-4
+    num_channels: 128
+    num_blocks: 6
+    time_embed_dim: 32
+    sim_cost: 32      # deducted from clock each step; K=1→32, K=2→64, K=3→96, K=4→128
+    time_limit: 576   # starting clock = 9×64 (K=2 full-game budget)

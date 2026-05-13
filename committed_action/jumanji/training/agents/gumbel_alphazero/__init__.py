@@ -1,0 +1,1 @@
+from jumanji.training.agents.gumbel_alphazero.gumbel_alphazero_agent import GumbelAlphaZeroAgent

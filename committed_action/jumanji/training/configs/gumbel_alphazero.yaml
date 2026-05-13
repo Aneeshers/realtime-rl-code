@@ -1,0 +1,16 @@
+defaults:
+    - _self_
+    - env: snake  # [bin_pack, cleaner, connector, cvrp, flat_pack, game_2048, graph_coloring, job_shop, knapsack, maze, minesweeper, mmst, multi_cvrp, pac_man, robot_warehouse, lbf, rubiks_cube, search_and_rescue, sliding_tile_puzzle, snake, sokoban, sudoku, tetris, tsp]
+
+agent: random  # [random, a2c, gumbel_alphazero]
+
+seed: 0
+
+logger:
+  type: wandb
+  name: run1
+  project: sokoban_aznet
+  entity: my-team   # optional
+  save_checkpoint: true
+  checkpoint_file_name: training_state
+  checkpoint_dir: checkpoints
