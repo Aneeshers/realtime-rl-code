@@ -182,7 +182,7 @@ def setup_agent(cfg: DictConfig, env: Environment) -> Agent:
             num_blocks=cfg.env.az.num_blocks,
             time_embed_dim=cfg.env.az.time_embed_dim,
 
-            # PacMan action delay (K=1 → no delay; other envs ignore this)
+            # PacMan action delay (K=1 -> no delay; other envs ignore this)
             pacman_action_delay=getattr(cfg.env.az, 'action_delay', 1),
         )
     else:

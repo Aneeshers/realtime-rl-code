@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
 
-NUM_SIMULATIONS=${NUM_SIMULATIONS:-32}
+NUM_SIMULATIONS=${NUM_SIMULATIONS:-16}
 SEED=${SEED:-0}
 SAVE_DIR=${SAVE_DIR:-./checkpoints/clock/go/base}
 mkdir -p "${SAVE_DIR}"

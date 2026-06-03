@@ -15,9 +15,9 @@ class State:
         Contains only pieces that have already locked in place. The currently falling
         piece is NOT included here; it is tracked by (tetromino_index, rotation, x, y).
     tetromino_index: index (0-6) identifying which of the 7 tetromino types is falling.
-    rotation: current rotation of the falling piece (0=0°, 1=90°, 2=180°, 3=270°).
-    x_position: column of the top-left corner of the piece's 4×4 bounding box.
-    y_position: row of the top-left corner of the piece's 4×4 bounding box.
+    rotation: current rotation of the falling piece (0=0 deg, 1=90 deg, 2=180 deg, 3=270 deg).
+    x_position: column of the top-left corner of the piece's 4x4 bounding box.
+    y_position: row of the top-left corner of the piece's 4x4 bounding box.
     score: cumulative reward earned so far in the episode.
     reward: reward earned on the most recent step.
     key: PRNG key used for sampling new pieces.
@@ -37,11 +37,11 @@ class State:
 
 class Observation(NamedTuple):
     """
-    board: binary locked grid (num_rows, num_cols) — placed pieces only, not the falling piece.
-    tetromino: 4×4 shape of the currently falling piece at its current rotation.
-    x_position: column of the top-left of the piece's 4×4 bounding box.
-    y_position: row of the top-left of the piece's 4×4 bounding box.
-    action_mask: always all-True (6,) — all 6 actions are always valid; invalid moves
+    board: binary locked grid (num_rows, num_cols) - placed pieces only, not the falling piece.
+    tetromino: 4x4 shape of the currently falling piece at its current rotation.
+    x_position: column of the top-left of the piece's 4x4 bounding box.
+    y_position: row of the top-left of the piece's 4x4 bounding box.
+    action_mask: always all-True (6,) - all 6 actions are always valid; invalid moves
         are silently ignored (piece stays put) rather than terminating the episode.
     step_count: number of steps taken so far.
     """

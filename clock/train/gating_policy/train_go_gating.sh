@@ -7,12 +7,12 @@ cd "$(dirname "$0")/../../.."
 export SPEED_ENV=${SPEED_ENV:-speed_go}
 export ENV_KWARGS=${ENV_KWARGS:-}
 export CKPT_ROOT=${CKPT_ROOT:-./checkpoints/clock/go/base}
-export PRETRAINED_NSIM=${PRETRAINED_NSIM:-32}
-export ITER_FILE=${ITER_FILE:-000600.ckpt}
+export PRETRAINED_NSIM=${PRETRAINED_NSIM:-16}
+export ITER_FILE=${ITER_FILE:-base_planner.ckpt}
 export GATE_CKPT_ROOT=${GATE_CKPT_ROOT:-./checkpoints/clock/go/gating}
 export WANDB_ENTITY=${WANDB_ENTITY:-}
 export WANDB_MODE=${WANDB_MODE:-disabled}
-SEED=${SEED:-1}
+SEED=${SEED:-0}
 
 mkdir -p "${GATE_CKPT_ROOT}"
 

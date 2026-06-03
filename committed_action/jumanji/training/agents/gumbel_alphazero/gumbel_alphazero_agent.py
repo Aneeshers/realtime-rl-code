@@ -96,7 +96,7 @@ class AZNet(hk.Module):
         # Broadcast time embedding across spatial dimensions and fuse into trunk
         t = t[:, None, None, :]  # (B,1,1,num_channels)
         x = x + t
-        # x is now (B,H,W,num_channels) — the full trunk output after time fusion.
+        # x is now (B,H,W,num_channels) - the full trunk output after time fusion.
         # Intercepted here for return_features before the policy/value heads.
 
         # Policy head
@@ -213,7 +213,7 @@ class GumbelAlphaZeroAgent(Agent):
         from jumanji.environments.routing.snake.env import Snake as _Snake
         from jumanji.environments.routing.snake.env import SnakeKT as _SnakeKT
         from jumanji.environments.packing.flat_pack_clock import FlatPackClock as _FlatPackClock
-        # PacManKT subclasses PacMan — check it first and exclude from plain check.
+        # PacManKT subclasses PacMan - check it first and exclude from plain check.
         self._is_pacman_kt = isinstance(self.raw_env_train, _PacManKT)
         self._is_pacman    = isinstance(self.raw_env_train, _PacMan) and not self._is_pacman_kt
         self._is_snake_kt = isinstance(self.raw_env_train, _SnakeKT)
@@ -230,9 +230,9 @@ class GumbelAlphaZeroAgent(Agent):
         )
         self._is_flat_pack_clock = isinstance(self.raw_env_train, _FlatPackClock)
 
-        # Tetris uses MultiDiscreteArray([4, num_cols]) — flatten to single int action space.
-        # TetrisRT uses DiscreteArray(6) — 6 flat actions.
-        # FlatPackClock uses MultiDiscreteArray([num_blocks,4,inner,inner]) — flattened.
+        # Tetris uses MultiDiscreteArray([4, num_cols]) - flatten to single int action space.
+        # TetrisRT uses DiscreteArray(6) - 6 flat actions.
+        # FlatPackClock uses MultiDiscreteArray([num_blocks,4,inner,inner]) - flattened.
         # int(getattr(..., "num_values", 4)) would fail on [4, num_cols], so handle explicitly.
         if self._is_tetris:
             self.num_cols = int(self.raw_env_train.num_cols)
@@ -241,8 +241,8 @@ class GumbelAlphaZeroAgent(Agent):
             self.num_actions = 6
         elif self._is_flat_pack_clock:
             _fp = self.raw_env_train
-            self._fp_num_blocks = int(_fp.num_blocks)   # 9 for 3×3 board
-            self._fp_inner = int(_fp.num_rows) - 2      # 5 for 7×7 grid
+            self._fp_num_blocks = int(_fp.num_blocks)   # 9 for 3x3 board
+            self._fp_inner = int(_fp.num_rows) - 2      # 5 for 7x7 grid
             self.num_actions = self._fp_num_blocks * 4 * self._fp_inner * self._fp_inner  # 900
         else:
             self.num_actions = int(getattr(env.action_spec, "num_values", 4))
@@ -764,12 +764,12 @@ class GumbelAlphaZeroAgent(Agent):
         """Execute K-1 delay steps then 1 real action for K-step action delay.
 
         For PacMan and TetrisRTKStep: delay steps use noop (action 4 or 5).
-        For TetrisRTKT: delay steps use argmax(policy_logits) — requires
+        For TetrisRTKT: delay steps use argmax(policy_logits) - requires
             params, net_state, and initial_obs to be provided.
         Falls through to a single step when K=1 or for all other envs.
 
         Args:
-            env_step_fn: batched (state, action) → (next_state, next_ts)
+            env_step_fn: batched (state, action) -> (next_state, next_ts)
             state: batched env state
             action: (B,) flat integer actions
             params: network params (TetrisRTKT only)
@@ -777,13 +777,13 @@ class GumbelAlphaZeroAgent(Agent):
             initial_obs: observation at `state` (TetrisRTKT only)
             discount_within_option: if set, overrides self.gamma for within-option
                 reward accumulation only (e.g. 1.0 for raw undiscounted reward sum).
-                total_discount (γ^K) always uses self.gamma regardless of this flag.
+                total_discount (gamma^K) always uses self.gamma regardless of this flag.
 
         Returns:
             final_state, final_ts,
-            total_reward   (B,) — accumulated reward across K steps
-            total_discount (B,) — γ^K (product of self.gamma * d_i over K steps)
-            any_terminated (B,) — True if any of the K steps ended the episode
+            total_reward   (B,) - accumulated reward across K steps
+            total_discount (B,) - gamma^K (product of self.gamma * d_i over K steps)
+            any_terminated (B,) - True if any of the K steps ended the episode
         """
         use_delay = (
             (self._is_pacman and self.pacman_action_delay > 1) or
@@ -805,7 +805,7 @@ class GumbelAlphaZeroAgent(Agent):
 
         # cum_d_rew: discount factor applied to rewards within the option.
         #   Uses discount_within_option (e.g. 1.0 for raw) or self.gamma if None.
-        # cum_d_smdp: always uses self.gamma; accumulates γ^K for total_discount.
+        # cum_d_smdp: always uses self.gamma; accumulates gamma^K for total_discount.
         within_gamma = self.gamma if discount_within_option is None else discount_within_option
 
         cum_r      = jnp.zeros_like(action, dtype=jnp.float32)
@@ -876,7 +876,7 @@ class GumbelAlphaZeroAgent(Agent):
         disc_k = final_ts.discount.astype(jnp.float32)
 
         total_reward   = cum_r + cum_d_rew  * r_k
-        total_discount = cum_d_smdp * (self.gamma * disc_k)   # always γ^K
+        total_discount = cum_d_smdp * (self.gamma * disc_k)   # always gamma^K
         any_terminated = any_done | final_ts.last()
 
         return final_state, final_ts, total_reward, total_discount, any_terminated
@@ -888,8 +888,8 @@ class GumbelAlphaZeroAgent(Agent):
     ) -> Tuple[jnp.ndarray, jnp.ndarray]:
         """Returns (obs_grid, time_vec) dispatching on environment type.
 
-        PacMan:  encodes scattered fields → (B,31,28,6); step_count from state.
-        Tetris:  encodes grid+piece+mask → (B,H,W,3); step_count from state.
+        PacMan:  encodes scattered fields -> (B,31,28,6); step_count from state.
+        Tetris:  encodes grid+piece+mask -> (B,H,W,3); step_count from state.
         Sokoban: uses obs.grid (B,H,W,C) and obs.step_count directly.
         """
         if self._is_pacman or self._is_pacman_kt:
@@ -897,7 +897,7 @@ class GumbelAlphaZeroAgent(Agent):
             step_count = state.step_count              # (B,)
         elif self._is_tetris:
             obs_grid = self._encode_obs_tetris(obs)   # (B,H,W,3)
-            step_count = state.step_count              # (B,) — obs.step_count may be 0
+            step_count = state.step_count              # (B,) - obs.step_count may be 0
         elif self._is_tetris_rt or self._is_tetris_rt_kstep or self._is_tetris_rt_kt:
             obs_grid = self._encode_obs_tetris_rt(obs)  # (B,H,W,2)
             step_count = obs.step_count                  # (B,)
@@ -934,7 +934,7 @@ class GumbelAlphaZeroAgent(Agent):
             B = obs.action_mask.shape[0]
             return jnp.zeros((B, 6), dtype=bool)
         elif self._is_flat_pack_clock:
-            # action_mask: (B, num_blocks, 4, inner, inner) → (B, num_actions)
+            # action_mask: (B, num_blocks, 4, inner, inner) -> (B, num_actions)
             return ~jnp.reshape(obs.action_mask, (obs.action_mask.shape[0], -1))
         else:
             return self._invalid_actions_sokoban(raw_env, state)
@@ -942,7 +942,7 @@ class GumbelAlphaZeroAgent(Agent):
     # ---- PacMan observation encoding ----
 
     def _encode_obs_pacman_unbatched(self, obs: Any) -> jnp.ndarray:
-        """Single (unbatched) PacMan observation → (H, W, 6) float32 grid.
+        """Single (unbatched) PacMan observation -> (H, W, 6) float32 grid.
 
         Coordinate convention (from env.py):
           Position.x = row (indexes first dim of grid, 0..30)
@@ -954,11 +954,11 @@ class GumbelAlphaZeroAgent(Agent):
         # Ch0: maze (1=passable, 0=wall)
         maze = obs.grid.astype(jnp.float32)  # (31, 28)
 
-        # Ch1: player location — grid[row, col] = grid[player.x, player.y]
+        # Ch1: player location - grid[row, col] = grid[player.x, player.y]
         player = jnp.zeros((H, W)).at[obs.player_locations.x, obs.player_locations.y].set(1.0)
 
         # Ch2: all 4 ghost locations combined into one channel
-        # ghost_locations shape (4,2): dim0=col, dim1=row → scatter as grid[row, col]
+        # ghost_locations shape (4,2): dim0=col, dim1=row -> scatter as grid[row, col]
         ghost = jnp.zeros((H, W)).at[
             obs.ghost_locations[:, 1], obs.ghost_locations[:, 0]
         ].add(1.0)
@@ -983,18 +983,18 @@ class GumbelAlphaZeroAgent(Agent):
         return jnp.stack([maze, player, ghost, pellets, powerups, frightened], axis=-1)
 
     def _encode_obs_pacman(self, obs: Any) -> jnp.ndarray:
-        """Batched PacMan observation → (B, H, W, 6)."""
+        """Batched PacMan observation -> (B, H, W, 6)."""
         return jax.vmap(self._encode_obs_pacman_unbatched)(obs)
 
     # ---- Tetris observation encoding ----
 
     def _encode_obs_tetris_unbatched(self, obs: Any) -> jnp.ndarray:
-        """Single (unbatched) Tetris observation → (H, W, 3) float32 grid.
+        """Single (unbatched) Tetris observation -> (H, W, 3) float32 grid.
 
         Channel layout:
           Ch0: board occupancy (0=empty, 1=filled)
-          Ch1: current tetromino (4×4) embedded in top-left corner, zeros elsewhere
-          Ch2: action validity heatmap — action_mask (4, num_cols) in first 4 rows
+          Ch1: current tetromino (4x4) embedded in top-left corner, zeros elsewhere
+          Ch2: action validity heatmap - action_mask (4, num_cols) in first 4 rows
         """
         H = self.raw_env_train.num_rows
         W = self.raw_env_train.num_cols
@@ -1003,19 +1003,19 @@ class GumbelAlphaZeroAgent(Agent):
 
         piece = jnp.zeros((H, W)).at[:4, :4].set(obs.tetromino.astype(jnp.float32))
 
-        # action_mask shape (4, W) — embed as first 4 rows of (H, W) channel
+        # action_mask shape (4, W) - embed as first 4 rows of (H, W) channel
         action_map = jnp.zeros((H, W)).at[:4, :].set(obs.action_mask.astype(jnp.float32))
 
         return jnp.stack([board, piece, action_map], axis=-1)  # (H, W, 3)
 
     def _encode_obs_tetris(self, obs: Any) -> jnp.ndarray:
-        """Batched Tetris observation → (B, H, W, 3)."""
+        """Batched Tetris observation -> (B, H, W, 3)."""
         return jax.vmap(self._encode_obs_tetris_unbatched)(obs)
 
     # ---- TetrisRT observation encoding ----
 
     def _encode_obs_tetris_rt_unbatched(self, obs: Any) -> jnp.ndarray:
-        """Single (unbatched) TetrisRT observation → (H, W, 2) float32 grid.
+        """Single (unbatched) TetrisRT observation -> (H, W, 2) float32 grid.
 
         Channel layout:
           Ch0: locked board occupancy (0=empty, 1=filled)
@@ -1038,7 +1038,7 @@ class GumbelAlphaZeroAgent(Agent):
         return jnp.stack([board_ch, piece_ch], axis=-1)  # (H, W, 2)
 
     def _encode_obs_tetris_rt(self, obs: Any) -> jnp.ndarray:
-        """Batched TetrisRT observation → (B, H, W, 2)."""
+        """Batched TetrisRT observation -> (B, H, W, 2)."""
         return jax.vmap(self._encode_obs_tetris_rt_unbatched)(obs)
 
     # ---- Action conversion ----
@@ -1046,7 +1046,7 @@ class GumbelAlphaZeroAgent(Agent):
     def _prepare_action(self, action: jnp.ndarray) -> jnp.ndarray:
         """Convert MCTS flat action index to env-compatible format.
 
-        Tetris: flat int in [0, 4*num_cols) → [rotation, x_pos] shape (..., 2).
+        Tetris: flat int in [0, 4*num_cols) -> [rotation, x_pos] shape (..., 2).
         All other envs: pass through unchanged.
         """
         if self._is_tetris:

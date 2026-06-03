@@ -13,7 +13,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../../.."
 
 NUM_SIMULATIONS=${NUM_SIMULATIONS:-32}
-SEED=${SEED:-0}
+SEED=${SEED:-3}
 SAVE_DIR=${SAVE_DIR:-./checkpoints/clock/hex/base}
 mkdir -p "${SAVE_DIR}"
 

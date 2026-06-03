@@ -86,7 +86,7 @@ def compute_strategy_bins(
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Compute per-episode K-frequency in normalized episode-progress bins.
 
-    k_choices : (T, N) int, K choice index 0–3 at each meta-step
+    k_choices : (T, N) int, K choice index 0-3 at each meta-step
     active    : (T, N) int/bool, 1 = episode alive at start of step
     Returns (mean_freq, se_freq) each of shape (n_bins, 4).
     """
@@ -191,7 +191,7 @@ def main():
             new_done = done | sel_dn
 
             step_info = {
-                "k_choices": k_choices,                      # (B,) int 0–3
+                "k_choices": k_choices,                      # (B,) int 0-3
                 "active":    active_mask.astype(jnp.int32),  # (B,) 1=alive
             }
             return (next_states, next_obs, raw_ret, new_done, k_cnt), step_info

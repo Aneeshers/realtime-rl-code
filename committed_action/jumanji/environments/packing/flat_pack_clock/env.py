@@ -21,11 +21,11 @@ class FlatPackClock(FlatPack):
     steps. The remaining clock is exposed in both State and Observation so the
     network learns clock-aware value estimates.
 
-    Default board: 3×3 blocks → 9 blocks, 7×7 grid, 900 flat actions.
+    Default board: 3x3 blocks -> 9 blocks, 7x7 grid, 900 flat actions.
 
-    Training K=1–4 uses sim_cost = K×32:
-      K=1 (32): 9×32=288 ticks used vs time_limit=576 → lots of slack
-      K=2 (64): 9×64=576 ticks used vs 576 → exactly constrained
+    Training K=1-4 uses sim_cost = Kx32:
+      K=1 (32): 9x32=288 ticks used vs time_limit=576 -> lots of slack
+      K=2 (64): 9x64=576 ticks used vs 576 -> exactly constrained
       K=3 (96): 576 ticks available, runs out at step 6
       K=4 (128): 576 ticks available, runs out at step ~4.5
     """
@@ -159,7 +159,7 @@ class FlatPackClock(FlatPack):
         )
 
     # ------------------------------------------------------------------
-    # Helper: convert FlatPackClock State → base FlatPack State
+    # Helper: convert FlatPackClock State -> base FlatPack State
     # ------------------------------------------------------------------
 
     def _to_base_state(self, state: State):

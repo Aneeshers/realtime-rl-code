@@ -2,11 +2,11 @@
 
 For each ablation condition (baseline, zero_obs, zero_time, zero_trunk, zero_value):
   1. Runs 50 full episodes where the gating policy receives the ablated input
-     but MCTS/env use real observations — gives actual episode returns.
+     but MCTS/env use real observations - gives actual episode returns.
   2. Records per-step K choices and logits for distribution analysis.
 
 Logged per condition:
-  - Episode return (mean ± SE)
+  - Episode return (mean +/- SE)
   - K distribution (% of steps choosing each K)
   - KL divergence of K distribution vs. baseline
   - Mean logit entropy
@@ -131,7 +131,7 @@ def main():
 
     B = args.eval_num_envs
 
-    # ── JIT-compiled eval with ablation mode ──────────────────────────────────
+    # -- JIT-compiled eval with ablation mode ----------------------------------
     @functools.partial(jax.jit, static_argnames=("ablation_mode",))
     def eval_ablated(g_params, init_states, init_obs, key, *, ablation_mode):
         az_net_params = jax.lax.stop_gradient(az_params_state.params.net)
@@ -203,7 +203,7 @@ def main():
         )
         return raw_ret, k_cnt, step_data
 
-    # ── Run all ablation conditions ───────────────────────────────────────────
+    # -- Run all ablation conditions -------------------------------------------
     results: Dict[str, dict] = {}
     baseline_k_flat = None
     baseline_k_dist = None
@@ -274,7 +274,7 @@ def main():
         logger.info(f"  Agreement: {agreement:.3f}")
         logger.info(f"  KL from baseline: {kl_div:.4f}")
 
-    # ── Summary table ─────────────────────────────────────────────────────────
+    # -- Summary table ---------------------------------------------------------
     logger.info("\n=== Feature Importance Summary ===")
     logger.info(
         f"{'Condition':<15} {'Return':>12} {'K1%':>6} {'K2%':>6} "
@@ -292,7 +292,7 @@ def main():
             f"{r['kl_from_baseline']:>8.4f}"
         )
 
-    # ── Save JSON ─────────────────────────────────────────────────────────────
+    # -- Save JSON -------------------------------------------------------------
     summary = {
         "n_episodes": args.n_episodes,
         "gating_checkpoint": args.gating_checkpoint_path,
@@ -304,7 +304,7 @@ def main():
         json.dump(summary, f, indent=2)
     logger.info(f"Results saved to {json_path}")
 
-    # ── W&B ───────────────────────────────────────────────────────────────────
+    # -- W&B -------------------------------------------------------------------
     if not args.no_wandb:
         log_dict = {}
         for name, r in results.items():

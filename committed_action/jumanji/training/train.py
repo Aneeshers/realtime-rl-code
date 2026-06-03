@@ -64,7 +64,7 @@ def train(cfg: omegaconf.DictConfig, log_compiles: bool = False) -> None:
     best_episode_return = float("-inf")
     start_epoch = 0
 
-    # ── Resume from checkpoint ────────────────────────────────────────────────
+    # -- Resume from checkpoint ------------------------------------------------
     resume_dir = cfg.get("resume_checkpoint_dir", None)
     if resume_dir:
         epoch_files = sorted(glob.glob(os.path.join(resume_dir, "training_state_epoch_*.pkl")))

@@ -8,13 +8,13 @@ The frozen pretrained AZNet (from pac_man_kt_models_1) provides:
   - MCTS recurrent function for tree search
   - Intermediate spatial features (trunk) for the gating network input
 
-The gating policy is trained with PPO and SMDP discounting (γ^K per meta-step).
+The gating policy is trained with PPO and SMDP discounting (gamma^K per meta-step).
 
 Each meta-step:
-  1. Gating policy samples K ∈ {1,2,3,4}
+  1. Gating policy samples K in {1,2,3,4}
   2. K-1 delay steps execute argmax(masked_logits) from the frozen AZNet
   3. MCTS with K*32 sims selects the final action
-  4. Meta-reward = sum of K raw env rewards, discount = γ^K
+  4. Meta-reward = sum of K raw env rewards, discount = gamma^K
 
 During training, all 4 MCTS options run for every env every meta-step
 (compute overhead: 4x), with the gating choice used to select the result.
@@ -56,7 +56,7 @@ def _sel4(g, o0, o1, o2, o3):
     return jax.lax.switch(g, [lambda: o0, lambda: o1, lambda: o2, lambda: o3])
 
 
-# ── Argument parsing ─────────────────────────────────────────────────────────
+# -- Argument parsing ---------------------------------------------------------
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
@@ -89,10 +89,10 @@ def parse_args() -> argparse.Namespace:
         choices=["gamma", "raw", "gamma_norm", "raw_norm"],
         help=(
             "How to compute r_meta for the gating policy:\n"
-            "  gamma     — γ-discounted sum across K steps (current default)\n"
-            "  raw       — unweighted sum across K steps (no within-option γ)\n"
-            "  gamma_norm — γ-discounted sum / K (per-step, γ-weighted)\n"
-            "  raw_norm   — raw sum / K (average reward per env step; "
+            "  gamma     - gamma-discounted sum across K steps (current default)\n"
+            "  raw       - unweighted sum across K steps (no within-option gamma)\n"
+            "  gamma_norm - gamma-discounted sum / K (per-step, gamma-weighted)\n"
+            "  raw_norm   - raw sum / K (average reward per env step; "
             "most interpretable speed-accuracy trade-off)"
         ),
     )
@@ -104,7 +104,7 @@ def parse_args() -> argparse.Namespace:
                    help="Direct path to a specific AZNet .pkl file. Overrides az_checkpoint_dir.")
     p.add_argument("--gating_checkpoint_dir", type=str,
                    default="./checkpoints/committed_action/pacman/gating")
-    # Checkpoints are saved at every eval epoch (eval_every) — no separate checkpoint_every.
+    # Checkpoints are saved at every eval epoch (eval_every) - no separate checkpoint_every.
 
     # Logging
     p.add_argument("--wandb_project", type=str, default="pacman_gating_ppo")
@@ -120,7 +120,7 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-# ── Checkpoint loading ────────────────────────────────────────────────────────
+# -- Checkpoint loading --------------------------------------------------------
 
 def load_az_checkpoint(checkpoint_dir_or_path: str) -> AlphaZeroParamsState:
     """Load an AZNet checkpoint from a directory (best/latest) or a direct .pkl path."""
@@ -177,7 +177,7 @@ def save_gating_checkpoint(gating_state: GatingParamsState, path: str) -> None:
     logger.info(f"Saved gating checkpoint: {path}")
 
 
-# ── Agent setup ───────────────────────────────────────────────────────────────
+# -- Agent setup ---------------------------------------------------------------
 
 def make_agents(env: VmapAutoResetWrapper, num_envs: int,
                 sim_options: List[int] = None) -> List[GumbelAlphaZeroAgent]:
@@ -203,10 +203,10 @@ def make_agents(env: VmapAutoResetWrapper, num_envs: int,
     return agents
 
 
-# ── Gating network forward function (Haiku transform) ────────────────────────
+# -- Gating network forward function (Haiku transform) ------------------------
 
 def make_gating_forward() -> hk.Transformed:
-    """Return hk.transform'd gating forward function (no state — LayerNorm)."""
+    """Return hk.transform'd gating forward function (no state - LayerNorm)."""
     def forward_fn(obs_grid, time_vec, az_trunk_feats, az_value):
         net = GatingNet(
             num_channels=64,
@@ -227,7 +227,7 @@ def init_gating(gating_fwd: hk.Transformed, key, dummy_obs_grid, dummy_time_vec,
     return GatingParamsState(params=params, opt_state=opt_state)
 
 
-# ── Single meta-step for one agent (one K value) ─────────────────────────────
+# -- Single meta-step for one agent (one K value) -----------------------------
 
 def meta_step_one_k(
     agent: GumbelAlphaZeroAgent,
@@ -235,24 +235,24 @@ def meta_step_one_k(
     az_net_state: hk.State,
     states: Any,
     obs: Any,
-    obs_grid: jnp.ndarray,    # (B, 31, 28, 6) — pre-computed
-    time_vec: jnp.ndarray,    # (B, 2) — pre-computed
-    invalid: jnp.ndarray,     # (B, A) bool — pre-computed
+    obs_grid: jnp.ndarray,    # (B, 31, 28, 6) - pre-computed
+    time_vec: jnp.ndarray,    # (B, 2) - pre-computed
+    invalid: jnp.ndarray,     # (B, A) bool - pre-computed
     key: jnp.ndarray,
     reward_mode: str = "gamma",
 ) -> Dict[str, jnp.ndarray]:
     """Run MCTS search + K real env steps for one K-value configuration.
 
     reward_mode controls how r_meta is computed:
-      "gamma"      — γ-discounted sum (default, standard SMDP)
-      "raw"        — unweighted sum (no within-option γ)
-      "gamma_norm" — γ-discounted sum / K
-      "raw_norm"   — raw sum / K  (average reward per env step)
+      "gamma"      - gamma-discounted sum (default, standard SMDP)
+      "raw"        - unweighted sum (no within-option gamma)
+      "gamma_norm" - gamma-discounted sum / K
+      "raw_norm"   - raw sum / K  (average reward per env step)
 
-    total_discount (γ^K) is always computed with self.gamma regardless of mode.
+    total_discount (gamma^K) is always computed with self.gamma regardless of mode.
 
     Returns:
-        next_states, next_obs, r_meta, discount (γ^K), done
+        next_states, next_obs, r_meta, discount (gamma^K), done
     """
     mcts_out = agent._mcts_policy(
         raw_env=agent.raw_env_train,
@@ -287,12 +287,12 @@ def meta_step_one_k(
         "next_states": next_state,
         "next_obs": next_ts.observation,
         "r_meta": r_meta,      # (B,)
-        "discount": discount,  # (B,) — γ^K * product of env discounts
-        "done": done,          # (B,) bool — True if any K step ended episode
+        "discount": discount,  # (B,) - gamma^K * product of env discounts
+        "done": done,          # (B,) bool - True if any K step ended episode
     }
 
 
-# ── Full meta-step: run all 4 K options, gate, select ───────────────────────
+# -- Full meta-step: run all 4 K options, gate, select -----------------------
 
 def single_meta_step_collect(
     agents: List[GumbelAlphaZeroAgent],
@@ -345,7 +345,7 @@ def single_meta_step_collect(
         for i in range(4)
     ]
 
-    # Stack scalar results: (4, B) → index by k_choices
+    # Stack scalar results: (4, B) -> index by k_choices
     r_meta_all   = jnp.stack([r["r_meta"]   for r in results], axis=0)  # (4, B)
     discount_all = jnp.stack([r["discount"] for r in results], axis=0)  # (4, B)
     done_all     = jnp.stack([r["done"]     for r in results], axis=0)  # (4, B)
@@ -376,27 +376,27 @@ def single_meta_step_collect(
         "k_choices": k_choices,         # (B,) int
         "log_prob_old": log_prob_old,   # (B,)
         "r_meta": selected_r_meta,      # (B,)
-        "discount": selected_discount,  # (B,) — γ^K
+        "discount": selected_discount,  # (B,) - gamma^K
         "done": selected_done,          # (B,) bool
-        "gating_value": gating_value,   # (B,) — V(s_t) for GAE
+        "gating_value": gating_value,   # (B,) - V(s_t) for GAE
     }
     return next_states, next_obs, transition
 
 
-# ── SMDP GAE ─────────────────────────────────────────────────────────────────
+# -- SMDP GAE -----------------------------------------------------------------
 
 @jax.jit
 def compute_smdp_gae(
     r_meta: jnp.ndarray,          # (T, B)
-    discounts: jnp.ndarray,        # (T, B) — γ^{K_t} per meta-step
+    discounts: jnp.ndarray,        # (T, B) - gamma^{K_t} per meta-step
     dones: jnp.ndarray,            # (T, B) bool
-    values: jnp.ndarray,           # (T, B) — V(s_t) from gating critic
-    bootstrap_value: jnp.ndarray,  # (B,)   — V(s_T) for final bootstrap
+    values: jnp.ndarray,           # (T, B) - V(s_t) from gating critic
+    bootstrap_value: jnp.ndarray,  # (B,)   - V(s_T) for final bootstrap
     gae_lambda: float,
 ) -> Tuple[jnp.ndarray, jnp.ndarray]:
     """SMDP GAE:
-        δ_t = r_t + γ^{K_t} · V(s_{t+1}) · (1 - done_t) - V(s_t)
-        A_t = δ_t + γ^{K_t} · λ · (1 - done_t) · A_{t+1}
+        delta_t = r_t + gamma^{K_t} * V(s_{t+1}) * (1 - done_t) - V(s_t)
+        A_t = delta_t + gamma^{K_t} * lambda * (1 - done_t) * A_{t+1}
 
     Returns:
         advantages   (T, B)
@@ -423,7 +423,7 @@ def compute_smdp_gae(
     return advantages, value_targets
 
 
-# ── PPO loss and update ───────────────────────────────────────────────────────
+# -- PPO loss and update -------------------------------------------------------
 
 def ppo_loss_fn(
     gating_params: hk.Params,
@@ -518,7 +518,7 @@ def ppo_epoch_update(
     num_minibatches: int,
     key: jnp.ndarray,
 ) -> Tuple[GatingParamsState, Dict]:
-    """Run ppo_epochs × num_minibatches gradient steps."""
+    """Run ppo_epochs x num_minibatches gradient steps."""
     T, B = advantages.shape
     total_n = T * B
     mb_size = total_n // num_minibatches
@@ -551,19 +551,19 @@ def ppo_epoch_update(
     return new_state, mean_metrics
 
 
-# ── Evaluation ────────────────────────────────────────────────────────────────
+# -- Evaluation ----------------------------------------------------------------
 # eval_gating is removed; eval is handled by jit_eval (defined in main) which
 # uses lax.scan so the eval loop is compiled once rather than unrolled.
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# -- Main ----------------------------------------------------------------------
 
 def main():
     args = parse_args()
     key = jax.random.PRNGKey(args.seed)
 
     logger.info(f"JAX devices: {jax.devices()}")
-    # ── Resolve AZNet checkpoint path and epoch tag ──
+    # -- Resolve AZNet checkpoint path and epoch tag --
     import re as _re
     if args.az_checkpoint_path:
         _ckpt_path = args.az_checkpoint_path
@@ -587,7 +587,7 @@ def main():
     )
     os.makedirs(args.gating_checkpoint_dir, exist_ok=True)
 
-    # ── W&B ──
+    # -- W&B --
     if not args.no_wandb:
         wandb.init(
             project=args.wandb_project,
@@ -596,21 +596,21 @@ def main():
             name=f"gating_{az_epoch_tag}_sims{sims_str}_seed{args.seed}",
         )
 
-    # ── Environment ──
+    # -- Environment --
     raw_env = jumanji.make("PacManKT-v1")
     env = VmapAutoResetWrapper(raw_env)
 
-    # ── Agents (4 K values) ──
+    # -- Agents (4 K values) --
     agents = make_agents(env, args.num_envs, args.sim_options)
 
-    # ── Load frozen AZNet ──
+    # -- Load frozen AZNet --
     logger.info(f"Loading frozen AZNet from: {_ckpt_path}")
     az_params_state = load_az_checkpoint(_ckpt_path)
     # Ensure on device
     az_params_state = jax.device_put(az_params_state)
     logger.info("AZNet loaded and frozen.")
 
-    # ── Gating network init ──
+    # -- Gating network init --
     gating_fwd = make_gating_forward()
 
     # Dummy inputs for init
@@ -634,7 +634,7 @@ def main():
     )
     logger.info("Gating network initialized.")
 
-    # ── JIT the entire rollout as a single lax.scan call ──
+    # -- JIT the entire rollout as a single lax.scan call --
     # Compiling the scan body once is O(1 meta-step) instead of O(T meta-steps).
     # gating_params is a traced argument so the compiled function is reused
     # across epochs (only values change, not structure).
@@ -655,7 +655,7 @@ def main():
         )
         return final_states, final_obs, data
 
-    # ── JIT-compiled eval (lax.scan, compiled once per greedy/random_policy pair) ──
+    # -- JIT-compiled eval (lax.scan, compiled once per greedy/random_policy pair) --
     # Defined here so agents/az_params_state/gating_fwd are stable closures.
     # static_argnames ensures JAX creates one compiled specialization per bool pair.
     @functools.partial(jax.jit, static_argnames=("greedy", "random_policy", "force_k"))
@@ -743,8 +743,8 @@ def main():
         )
         return raw_ret, disc_ret, k_cnt
 
-    # ── Compute fixed baselines ONCE (pre-training) ──────────────────────────
-    # These only depend on the frozen AZNet — they never change across epochs.
+    # -- Compute fixed baselines ONCE (pre-training) --------------------------
+    # These only depend on the frozen AZNet - they never change across epochs.
     # Logged to wandb summary so they appear as horizontal reference lines.
     logger.info("Computing fixed baselines (once, pre-training)...")
     _bkey = jax.random.PRNGKey(args.seed + 9999)
@@ -771,7 +771,7 @@ def main():
         for k, v in baseline_metrics.items():
             wandb.run.summary[k] = v   # horizontal reference lines in wandb plots
 
-    # ── Initial env state ──
+    # -- Initial env state --
     key, reset_key = jax.random.split(key)
     reset_keys = jax.random.split(reset_key, args.num_envs)
     states, timesteps = env.reset(reset_keys)
@@ -782,7 +782,7 @@ def main():
     logger.info("Starting PPO gating training...")
 
     for epoch in range(args.num_epochs):
-        # ── Collect T meta-steps via a single lax.scan call ──
+        # -- Collect T meta-steps via a single lax.scan call --
         # data shape: (meta_steps, num_envs, ...)
         key, collect_key = jax.random.split(key)
         cur_states, cur_obs, data = collect_rollout(
@@ -804,7 +804,7 @@ def main():
             jax.lax.stop_gradient(az_val_final[:, None]),
         )  # (num_envs,)
 
-        # ── SMDP GAE ──
+        # -- SMDP GAE --
         advantages, value_targets = compute_smdp_gae(
             r_meta=data["r_meta"],
             discounts=data["discount"],
@@ -814,7 +814,7 @@ def main():
             gae_lambda=args.gae_lambda,
         )
 
-        # ── PPO update ──
+        # -- PPO update --
         key, ppo_key = jax.random.split(key)
         gating_state, ppo_metrics = ppo_epoch_update(
             gating_state=gating_state,
@@ -827,7 +827,7 @@ def main():
             key=ppo_key,
         )
 
-        # ── Training metrics ──
+        # -- Training metrics --
         train_metrics = {
             "train/mean_raw_reward":      float(jnp.mean(data["r_meta"])),
             "train/mean_discount":        float(jnp.mean(data["discount"])),
@@ -842,7 +842,7 @@ def main():
         for k_idx, freq in enumerate(k_hist):
             train_metrics[f"train/k{k_idx+1}_freq"] = float(freq)
 
-        # ── Eval ──
+        # -- Eval --
         eval_metrics = {}
         if epoch % args.eval_every == 0:
             key, eval_key = jax.random.split(key)
@@ -883,7 +883,7 @@ def main():
                 os.path.join(args.gating_checkpoint_dir, f"gating_state_epoch_{epoch:04d}.pkl"),
             )
 
-        # ── Log to wandb ──
+        # -- Log to wandb --
         if not args.no_wandb:
             wandb.log({**train_metrics, **eval_metrics, "epoch": epoch})
 

@@ -24,13 +24,13 @@ CKPT_ROOT=${CKPT_ROOT:-./checkpoints/committed_action}
 
 case "${GAME}" in
   tetris)
-    AZ_CKPT=${AZ_CKPT:-${CKPT_ROOT}/tetris_rt/base/k1/training_state_best.pkl}
+    AZ_CKPT=${AZ_CKPT:-${CKPT_ROOT}/tetris_rt/base/training_state_best.pkl}
     GATING_CKPT=${GATING_CKPT:-${CKPT_ROOT}/tetris_rt/gating/gating_state_best.pkl} ;;
   pacman)
-    AZ_CKPT=${AZ_CKPT:-${CKPT_ROOT}/pacman/base/k1/training_state_best.pkl}
+    AZ_CKPT=${AZ_CKPT:-${CKPT_ROOT}/pacman/base/training_state_best.pkl}
     GATING_CKPT=${GATING_CKPT:-${CKPT_ROOT}/pacman/gating/gating_state_best.pkl} ;;
   snake)
-    AZ_CKPT=${AZ_CKPT:-${CKPT_ROOT}/snake/base/k3/training_state_best.pkl}
+    AZ_CKPT=${AZ_CKPT:-${CKPT_ROOT}/snake/base/training_state_best.pkl}
     GATING_CKPT=${GATING_CKPT:-${CKPT_ROOT}/snake/gating/gating_state_best.pkl} ;;
   *)
     echo "Unknown GAME=${GAME}. Use tetris, pacman, or snake." >&2; exit 1 ;;

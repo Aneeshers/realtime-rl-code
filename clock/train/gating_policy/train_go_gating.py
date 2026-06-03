@@ -125,13 +125,13 @@ def load_speed_env_module(env_module_name: str) -> Tuple[Callable[..., Any], Cal
 # ================================================================
 
 CKPT_ROOT = os.getenv("CKPT_ROOT", "./checkpoints/clock/go/base")
-ITER_FILE = os.getenv("ITER_FILE", "000000.ckpt")
+ITER_FILE = os.getenv("ITER_FILE", "base_planner.ckpt")
 PRETRAINED_NSIM = int(os.getenv("PRETRAINED_NSIM", "16"))
 
 SIM_OPTIONS = _parse_int_list_envvar("SIM_OPTIONS", "16,32,64,96", min_len=2)
 NUM_OPTIONS = len(SIM_OPTIONS)
 
-NUM_UPDATES = int(os.getenv("NUM_UPDATES", "500"))
+NUM_UPDATES = int(os.getenv("NUM_UPDATES", "275"))
 ROLLOUT_STEPS = int(os.getenv("ROLLOUT_STEPS", "32768"))
 
 GAMMA = float(os.getenv("GAMMA", "0.99"))
@@ -361,7 +361,7 @@ class GateNetV2(hk.Module):
       - process AZNet intermediate feature map with conv + global avg/max pool
       - process raw observation with conv + global avg/max pool
       - concat both + time_feat (5-dim) + AZ value
-      - 3-layer MLP → logits (NUM_OPTIONS-way) + scalar value
+      - 3-layer MLP -> logits (NUM_OPTIONS-way) + scalar value
     """
     def __init__(self, num_options: int, mode: int = 2, name: str = "GateNetV2"):
         super().__init__(name=name)
@@ -752,7 +752,7 @@ def opponent_label_to_spec(label: str) -> Tuple[int, Optional[int]]:
 
 def build_all_combo_tables() -> Tuple[np.ndarray, np.ndarray, np.ndarray, List[Tuple[int, str]]]:
     """
-    Build ALL (budget × opponent) tuple tables.
+    Build ALL (budget x opponent) tuple tables.
 
     Returns:
       all_kinds_np: (N,) int32

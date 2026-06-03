@@ -1,17 +1,17 @@
 """Standalone evaluation script for the TetrisRT adaptive gating policy.
 
 Evaluates a trained gating checkpoint against fixed-K baselines, reporting:
-  - Mean ± SE raw episode return over N episodes
+  - Mean +/- SE raw episode return over N episodes
   - MCTS inference time and effective frames/second per (K, sims) pair
   - Per-step K/sims distribution over episode progression (mean + SE fill)
   - Stack height, board fill, and piece y-position conditioned on K choice
   - Mean K chosen per tetromino type
 
 Tetris-specific context analogues to PacMan:
-  stack_height  ↔  ghost distance    (danger level — high stack = more urgent)
-  board_fill    ↔  pellet fraction   (overall board density)
-  y_position    ↔  frightened state  (piece urgency — how far the piece has fallen)
-  tetromino_idx ↔  (no pacman equiv) which piece types demand more deliberation
+  stack_height  <->  ghost distance    (danger level - high stack = more urgent)
+  board_fill    <->  pellet fraction   (overall board density)
+  y_position    <->  frightened state  (piece urgency - how far the piece has fallen)
+  tetromino_idx <->  (no pacman equiv) which piece types demand more deliberation
 
 Usage:
   python -m jumanji.training.eval_tetris_rt_gating_policy \\
@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 TETROMINO_NAMES = ["I", "O", "T", "S", "Z", "J", "L"]
 
 
-# ── Argument parsing ──────────────────────────────────────────────────────────
+# -- Argument parsing ----------------------------------------------------------
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
@@ -84,7 +84,7 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# -- Helpers -------------------------------------------------------------------
 
 def load_gating_checkpoint(path: str) -> GatingParamsState:
     with open(path, "rb") as f:
@@ -100,7 +100,7 @@ def mean_se(arr: np.ndarray) -> Tuple[float, float]:
     return m, se
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# -- Main ----------------------------------------------------------------------
 
 def main():
     args = parse_args()
@@ -124,7 +124,7 @@ def main():
             name=f"eval_{run_name}",
         )
 
-    # ── Environment + agents ──
+    # -- Environment + agents --
     raw_env = jumanji.make(args.env_name)
     eval_env = VmapAutoResetWrapper(raw_env)
     agents = make_agents(eval_env, args.eval_num_envs, args.sim_options)
@@ -133,9 +133,9 @@ def main():
     _dummy_obs = raw_env.observation_spec.generate_value()
     H, W = _dummy_obs.board.shape[0], _dummy_obs.board.shape[1]
     board_total_cells = H * W
-    logger.info(f"TetrisRT board: {H}×{W}")
+    logger.info(f"TetrisRT board: {H}x{W}")
 
-    # ── Load checkpoints ──
+    # -- Load checkpoints --
     az_params_state = jax.device_put(load_az_checkpoint(args.az_checkpoint_path))
     gating_state = load_gating_checkpoint(args.gating_checkpoint_path)
     gating_params = gating_state.params
@@ -143,10 +143,10 @@ def main():
 
     B = args.eval_num_envs
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # JIT eval — summary (fast baseline + gating return collection)
+    # ===========================================================================
+    # JIT eval - summary (fast baseline + gating return collection)
     # Mirrors jit_eval from training exactly: lax.scan, no Python loop.
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     @functools.partial(jax.jit, static_argnames=("greedy", "random_policy", "force_k"))
     def jit_eval(g_params, init_states, init_obs, key, *, greedy, random_policy, force_k=-1):
         az_net_params = jax.lax.stop_gradient(az_params_state.params.net)
@@ -210,18 +210,18 @@ def main():
         (_, _, raw_ret, _, _, k_cnt), _ = jax.lax.scan(scan_body, init_carry, step_keys)
         return raw_ret, k_cnt
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Detailed eval — per-step Tetris context tracking (greedy gating only)
+    # ===========================================================================
+    # Detailed eval - per-step Tetris context tracking (greedy gating only)
     #
     # Tracks at each meta-step:
-    #   stack_height   — rows with ≥1 locked cell (danger level, like ghost dist)
-    #   board_fill     — locked cells / total cells (density, like pellet frac)
-    #   piece_y        — y_position of falling piece (urgency, like frightened state)
-    #   tetromino_idx  — which of 7 piece types is falling
+    #   stack_height   - rows with >=1 locked cell (danger level, like ghost dist)
+    #   board_fill     - locked cells / total cells (density, like pellet frac)
+    #   piece_y        - y_position of falling piece (urgency, like frightened state)
+    #   tetromino_idx  - which of 7 piece types is falling
     #
     # All context captured BEFORE the MCTS call (decision context).
-    # lax.scan over eval_meta_steps; vmapped 4× MCTS inside.
-    # ═══════════════════════════════════════════════════════════════════════════
+    # lax.scan over eval_meta_steps; vmapped 4x MCTS inside.
+    # ===========================================================================
     @jax.jit
     def detailed_eval(g_params, init_states, init_obs, key):
         az_net_params = jax.lax.stop_gradient(az_params_state.params.net)
@@ -229,7 +229,7 @@ def main():
 
         def scan_body(carry, step_key):
             states, obs, raw_ret, done, k_cnt = carry
-            active_mask = ~done  # (B,) — was episode alive at START of this step
+            active_mask = ~done  # (B,) - was episode alive at START of this step
 
             obs_grid, time_vec = agents[0]._get_grid_and_time(states, obs)
             invalid = agents[0]._get_invalid_actions(agents[0].raw_env_train, states, obs)
@@ -242,16 +242,16 @@ def main():
             logits, _ = gating_fwd.apply(g_params, obs_grid, time_vec, az_trk, az_val)
             k_choices = jnp.argmax(logits, axis=-1)  # greedy
 
-            # ── Tetris context at decision time ──────────────────────────────
+            # -- Tetris context at decision time ------------------------------
             # Stack height: number of rows that contain at least one locked cell.
-            # High stack → board is fuller / more dangerous → may warrant more compute.
+            # High stack -> board is fuller / more dangerous -> may warrant more compute.
             stack_height = (states.locked_grid.sum(axis=-1) > 0).sum(axis=-1).astype(jnp.int32)  # (B,)
 
             # Board fill fraction: total occupied cells / total cells.
             board_fill = states.locked_grid.sum(axis=(1, 2)).astype(jnp.float32) / board_total_cells  # (B,)
 
             # Piece y-position: how far down the falling piece is (0=top, H=bottom).
-            # Higher y → piece is lower → less time to decide → more urgent.
+            # Higher y -> piece is lower -> less time to decide -> more urgent.
             piece_y = states.y_position.astype(jnp.int32)  # (B,)
 
             # Tetromino type: which of the 7 standard pieces is falling.
@@ -283,12 +283,12 @@ def main():
             new_done = done | sel_dn
 
             step_info = {
-                "k_choices":      k_choices,                      # (B,) int 0–3
+                "k_choices":      k_choices,                      # (B,) int 0-3
                 "sims_chosen":    (k_choices + 1) * 32,           # (B,) int 32/64/96/128
                 "stack_height":   stack_height,                   # (B,) int
-                "board_fill":     board_fill,                     # (B,) float 0–1
+                "board_fill":     board_fill,                     # (B,) float 0-1
                 "piece_y":        piece_y,                        # (B,) int
-                "tetromino_idx":  tetromino_idx,                  # (B,) int 0–6
+                "tetromino_idx":  tetromino_idx,                  # (B,) int 0-6
                 "active":         active_mask.astype(jnp.int32),  # (B,) 1=alive
                 "reward":         sel_r,                          # (B,) float
             }
@@ -305,7 +305,7 @@ def main():
         )
         return raw_ret, k_cnt, step_data
 
-    # ── Batch-run helpers ─────────────────────────────────────────────────────
+    # -- Batch-run helpers -----------------------------------------------------
 
     def run_jit_eval(n_episodes, force_k=-1, random_policy=False, greedy=True):
         all_returns, all_kcnt = [], []
@@ -337,16 +337,16 @@ def main():
             all_returns.append(np.array(raw_ret))
             all_step_data.append(jax.tree_util.tree_map(np.array, step_data))
         returns = np.concatenate(all_returns)[:n_episodes]
-        # Concatenate episodes along batch axis: (T, B*n_batches) → (T, n_episodes)
+        # Concatenate episodes along batch axis: (T, B*n_batches) -> (T, n_episodes)
         step_data_all = jax.tree_util.tree_map(
             lambda *xs: np.concatenate(xs, axis=1)[:, :n_episodes],
             *all_step_data,
         )
         return returns, step_data_all
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 1. MCTS Timing Benchmark
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     logger.info("=== MCTS Timing Benchmark ===")
 
     timing_env = VmapAutoResetWrapper(jumanji.make(args.env_name))
@@ -386,7 +386,7 @@ def main():
         fps    = K / mean_t
         timing_results[K] = {"sims": sims, "mean_ms": mean_t * 1000,
                               "std_ms": std_t * 1000, "fps": fps}
-        logger.info(f"  K={K} sims={sims}: {mean_t*1000:.1f} ± {std_t*1000:.1f} ms  →  {fps:.1f} frames/s")
+        logger.info(f"  K={K} sims={sims}: {mean_t*1000:.1f} ± {std_t*1000:.1f} ms  ->  {fps:.1f} frames/s")
 
     print("\n  K  sims  t_mean(ms)  t_std(ms)  eff_fps")
     print("  " + "-" * 44)
@@ -394,9 +394,9 @@ def main():
         print(f"  {K}   {tr['sims']:3d}    {tr['mean_ms']:7.1f}    {tr['std_ms']:6.1f}   {tr['fps']:7.1f}")
     print()
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 2. Fixed-K Baselines
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     logger.info("=== Baselines ===")
     baseline_results: Dict[str, dict] = {}
     for k_idx in range(4):
@@ -411,9 +411,9 @@ def main():
     baseline_results["random"] = {"mean": m, "se": se}
     logger.info(f"  random: {m:.1f} ± {se:.1f}")
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # 3. Gating Policy — Summary
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
+    # 3. Gating Policy - Summary
+    # ===========================================================================
     logger.info("=== Gating Policy (summary) ===")
     gating_returns, gating_kcnt = run_jit_eval(args.n_episodes, force_k=-1)
     gating_mean, gating_se = mean_se(gating_returns)
@@ -422,9 +422,9 @@ def main():
     logger.info(f"  return: {gating_mean:.1f} ± {gating_se:.1f}")
     logger.info(f"  K_pct:  {np.round(k_dist_pct, 1)}")
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # 4. Gating Policy — Detailed Per-Step Context
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
+    # 4. Gating Policy - Detailed Per-Step Context
+    # ===========================================================================
     logger.info("=== Gating Policy (detailed) ===")
     gating_det_returns, step_data = run_detailed(args.n_episodes)
     gating_det_mean, gating_det_se = mean_se(gating_det_returns)
@@ -437,7 +437,7 @@ def main():
     stack_height  = step_data["stack_height"]           # (T, N) int
     board_fill    = step_data["board_fill"]             # (T, N) float
     piece_y       = step_data["piece_y"]                # (T, N) int
-    tetromino_idx = step_data["tetromino_idx"]          # (T, N) int 0–6
+    tetromino_idx = step_data["tetromino_idx"]          # (T, N) int 0-6
 
     total_active = active.sum()
     global_k_pct = np.array([
@@ -446,7 +446,7 @@ def main():
     ])
     logger.info(f"  global K_pct (detailed): {np.round(global_k_pct, 1)}")
 
-    # ── Per-step statistics ───────────────────────────────────────────────────
+    # -- Per-step statistics ---------------------------------------------------
     act_count = active.sum(axis=1)          # (T,)
     valid_t   = act_count > 1              # (T,)
 
@@ -467,7 +467,7 @@ def main():
         k_count = (active & (k_choices == k)).sum(axis=1).astype(float)
         step_k_frac[:, k] = np.where(valid_t, k_count / np.maximum(act_count, 1), np.nan)
 
-    # ── Context statistics conditioned on K ──────────────────────────────────
+    # -- Context statistics conditioned on K ----------------------------------
     flat_active   = active.flatten()
     flat_k        = k_choices.flatten()
     flat_height   = stack_height.flatten().astype(float)
@@ -476,7 +476,7 @@ def main():
     flat_tidx     = tetromino_idx.flatten()
 
     def _by_k(flat_vals):
-        """Mean ± SE of flat_vals for each K choice, over active steps."""
+        """Mean +/- SE of flat_vals for each K choice, over active steps."""
         out = {}
         for k in range(4):
             mask = flat_active & (flat_k == k)
@@ -505,7 +505,7 @@ def main():
         m, se = piece_y_by_k[k]
         logger.info(f"  K={k+1}: {m:.2f} ± {se:.2f}")
 
-    # ── Mean K choice per tetromino type ──────────────────────────────────────
+    # -- Mean K choice per tetromino type --------------------------------------
     # For each piece type, compute: mean K (0-indexed, so +1 for display) over
     # active steps where that piece type is falling.
     mean_k_by_piece = {}
@@ -523,9 +523,9 @@ def main():
         m, se = mean_k_by_piece[t_idx]
         logger.info(f"  {TETROMINO_NAMES[t_idx]}: {m:.2f} ± {se:.2f}")
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 5. Plots
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     COLORS   = ["#4C72B0", "#DD8452", "#55A868", "#C44E52", "#8172B2", "#777777"]
     K_LABELS = ["K=1 (32)", "K=2 (64)", "K=3 (96)", "K=4 (128)"]
     k_short  = ["K=1", "K=2", "K=3", "K=4"]
@@ -574,7 +574,7 @@ def main():
     plt.savefig(os.path.join(args.output_dir, "per_step_sims.png"), dpi=150)
     plt.close()
 
-    # Plot 3: Stacked area — K fraction per step
+    # Plot 3: Stacked area - K fraction per step
     fig, ax = plt.subplots(figsize=(11, 4))
     bottoms = np.zeros(len(valid_idx))
     for k in range(4):
@@ -599,7 +599,7 @@ def main():
     ax.bar(k_short, sh_means, color=COLORS[:4], alpha=0.85)
     ax.errorbar(range(4), sh_means, yerr=sh_ses,
                 fmt="none", color="black", capsize=5, linewidth=1.5)
-    ax.set_ylabel(f"Mean stack height (rows with ≥1 locked cell, max={H})")
+    ax.set_ylabel(f"Mean stack height (rows with >=1 locked cell, max={H})")
     ax.set_title("Stack Height when Each K is Chosen")
     ax.set_ylim(0, H)
     plt.tight_layout()
@@ -644,7 +644,7 @@ def main():
                 fmt="none", color="black", capsize=5, linewidth=1.5)
     ax.axhline(float(np.nanmean(piece_mean_k)), color="gray", linestyle="--",
                linewidth=1, label="Overall mean K")
-    ax.set_ylabel("Mean K chosen (1–4)")
+    ax.set_ylabel("Mean K chosen (1-4)")
     ax.set_xlabel("Tetromino type")
     ax.set_title("Mean K Chosen per Piece Type")
     ax.set_ylim(1, 4)
@@ -677,9 +677,9 @@ def main():
 
     logger.info(f"All plots saved to {args.output_dir}/")
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 6. Summary JSON
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     summary = {
         "n_episodes":        args.n_episodes,
         "gating_checkpoint": args.gating_checkpoint_path,
@@ -723,9 +723,9 @@ def main():
         json.dump(summary, f, indent=2)
     logger.info(f"Results saved to {json_path}")
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 7. W&B Logging
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     if not args.no_wandb:
         log_dict = {
             "gating/mean_return":    gating_mean,

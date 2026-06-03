@@ -12,7 +12,8 @@ OPPONENTS=${OPPONENTS:-0,16,32,64,96,random}
 NUM_GAMES=${NUM_GAMES:-100}
 CKPT_ROOT=${CKPT_ROOT:-./checkpoints/clock/go/base}
 GATE_ROOT=${GATE_ROOT:-./checkpoints/clock/go/gating}
-ITER_FILE=${ITER_FILE:-000600.ckpt}
+GATE_CKPT=${GATE_CKPT:-${GATE_ROOT}/gate.pkl}
+ITER_FILE=${ITER_FILE:-base_planner.ckpt}
 OUTPUT_DIR=${OUTPUT_DIR:-./eval_outputs/clock/go_gating}
 
 mkdir -p "${OUTPUT_DIR}"
@@ -26,6 +27,7 @@ PYTHONPATH=clock/networks:clock/envs:. python clock/eval/gating_policy/eval_go_g
   --num_games       "${NUM_GAMES}"      \
   --ckpt_root       "${CKPT_ROOT}"      \
   --gate_root       "${GATE_ROOT}"      \
+  --gate_ckpt       "${GATE_CKPT}"      \
   --iter_file       "${ITER_FILE}"      \
   --output_dir      "${OUTPUT_DIR}"     \
   ${EXTRA_ARGS:-}

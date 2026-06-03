@@ -19,5 +19,5 @@ az:
     num_channels: 128
     num_blocks: 6
     time_embed_dim: 32
-    sim_cost: 32      # deducted from clock each step; K=1→32, K=2→64, K=3→96, K=4→128
-    time_limit: 576   # starting clock = 9×64 (K=2 full-game budget)
+    sim_cost: 32      # deducted from clock each step; K=1->32, K=2->64, K=3->96, K=4->128
+    time_limit: 576   # starting clock = 9x64 (K=2 full-game budget)

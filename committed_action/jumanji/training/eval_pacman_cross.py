@@ -2,11 +2,11 @@
 Cross-model evaluation for PacMan Gumbel-AlphaZero.
 
 For a model trained with K_model action delay, evaluate it at every combination of:
-  - K_eval  ∈ args.k_eval_list   (test-time action delay; changes MCTS planning horizon
+  - K_eval  in args.k_eval_list   (test-time action delay; changes MCTS planning horizon
                                    AND real env execution)
-  - num_sims ∈ args.sims_list    (MCTS simulation budget)
+  - num_sims in args.sims_list    (MCTS simulation budget)
 
-Reward metric: RAW (undiscounted) episode return — sum of every individual env-step
+Reward metric: RAW (undiscounted) episode return - sum of every individual env-step
 reward over the whole episode, with no gamma weighting.
 
 Usage:
@@ -48,9 +48,9 @@ logger = logging.getLogger(__name__)
 _PACMAN_NOOP = 4  # "stay" action index in PacMan
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Robust checkpoint loading
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 
 
 def load_checkpoint(checkpoint_path: str) -> TrainingState:
@@ -93,9 +93,9 @@ def load_checkpoint(checkpoint_path: str) -> TrainingState:
     return training_state
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Core eval: single episode with K-step execution and raw reward accumulation
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 
 
 def eval_one_episode_kstep(
@@ -121,7 +121,7 @@ def eval_one_episode_kstep(
         eval_env:    Raw (unwrapped) PacMan environment.
         params_state: Checkpoint parameters (single-device, pmap axis stripped).
         key:         JAX PRNGKey.
-        k_eval:      Python int — number of env steps per agent decision.
+        k_eval:      Python int - number of env steps per agent decision.
 
     Returns:
         Dict with "episode_return" (raw) and "episode_length" (in env steps).
@@ -132,12 +132,12 @@ def eval_one_episode_kstep(
         eval_env=eval_env,
     )
 
-    # ── while-loop condition: stop when any K-step sub-block terminates ──────
+    # -- while-loop condition: stop when any K-step sub-block terminates ------
     def cond_fun(carry):
         _acting_state, _return, done = carry
         return ~done
 
-    # ── while-loop body ───────────────────────────────────────────────────────
+    # -- while-loop body -------------------------------------------------------
     def body_fun(carry):
         acting_state, return_, done = carry
         key, action_key = jax.random.split(acting_state.key)
@@ -149,7 +149,7 @@ def eval_one_episode_kstep(
             action_key,
         )
 
-        # 2. Build the K_eval-length action sequence: [noop, …, noop, action]
+        # 2. Build the K_eval-length action sequence: [noop, ..., noop, action]
         noops = jnp.full((k_eval - 1,), _PACMAN_NOOP, dtype=jnp.int32)
         real_action = jnp.reshape(action, (1,)).astype(jnp.int32)
         all_actions = jnp.concatenate([noops, real_action], axis=0)  # (k_eval,)
@@ -157,7 +157,7 @@ def eval_one_episode_kstep(
         # 3. Step through K_eval env steps, accumulating raw rewards.
         #    Once `early_done` triggers, we freeze the state and stop
         #    accumulating (but must still execute steps for JAX scan shape
-        #    consistency — the results are masked out).
+        #    consistency - the results are masked out).
         def do_step(carry, a):
             s, cum_r, early_done = carry
             ns, ts = eval_env.step(s, a)
@@ -193,7 +193,7 @@ def eval_one_episode_kstep(
         )
         return new_acting_state, return_ + step_return, done | any_done
 
-    # ── Initialise episode ────────────────────────────────────────────────────
+    # -- Initialise episode ----------------------------------------------------
     reset_key, init_key = jax.random.split(key)
     state, timestep = eval_env.reset(reset_key)
     acting_state = ActingState(
@@ -220,9 +220,9 @@ def eval_one_episode_kstep(
     return eval_metrics
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Batch evaluation
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 
 
 def run_batch_eval(
@@ -262,15 +262,15 @@ def run_batch_eval(
     return mean_metrics, time_per_episode
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Main
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="Cross-model PacMan evaluation: load K_model checkpoint, "
-                    "evaluate over K_eval × num_sims grid."
+                    "evaluate over K_eval x num_sims grid."
     )
     parser.add_argument(
         "--k_model",
@@ -282,7 +282,7 @@ def main():
         "--base_model_dir",
         type=str,
         default="./checkpoints/committed_action/pacman/base/k",
-        help="Base path for model directories; k_model is appended (e.g. …_2/).",
+        help="Base path for model directories; k_model is appended (e.g. ..._2/).",
     )
     parser.add_argument(
         "--checkpoint_name",
@@ -314,7 +314,7 @@ def main():
     parser.add_argument("--wandb_project", type=str, default="pacman_cross_eval")
     parser.add_argument("--wandb_entity", type=str, default=None)
 
-    # Network architecture — must match training config
+    # Network architecture - must match training config
     parser.add_argument("--num_channels", type=int, default=128)
     parser.add_argument("--num_blocks", type=int, default=6)
     parser.add_argument("--time_embed_dim", type=int, default=32)
@@ -337,7 +337,7 @@ def main():
         training_state.params_state,
     )
 
-    # ── Build environment and agent ──────────────────────────────────────────
+    # -- Build environment and agent ------------------------------------------
     env = jumanji.make("PacMan-v1")
     wrapped_env = VmapAutoResetWrapper(env)  # needed for agent __init__ specs
 
@@ -345,7 +345,7 @@ def main():
         env=wrapped_env,
         n_steps=1,           # unused at eval
         total_batch_size=1,  # unused at eval
-        num_simulations=2,   # placeholder — overridden per run
+        num_simulations=2,   # placeholder - overridden per run
         gamma=args.gamma,
         learning_rate=1e-4,  # unused at eval
         num_channels=args.num_channels,
@@ -356,7 +356,7 @@ def main():
 
     key = jax.random.PRNGKey(args.seed)
 
-    # ── Sweep over (K_eval, num_sims) ────────────────────────────────────────
+    # -- Sweep over (K_eval, num_sims) ----------------------------------------
     all_results: List[Dict] = []
 
     for k_eval in args.k_eval_list:
@@ -419,7 +419,7 @@ def main():
 
             all_results.append(log_data)
 
-    # ── Summary W&B run: full 3×3 (or N×M) grid as a Table ─────────────────
+    # -- Summary W&B run: full 3x3 (or NxM) grid as a Table -----------------
     logger.info(f"\n{'='*60}\nCreating summary run for k_model={args.k_model}\n{'='*60}")
 
     summary_run = wandb.init(

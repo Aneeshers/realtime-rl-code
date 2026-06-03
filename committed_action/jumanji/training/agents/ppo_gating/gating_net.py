@@ -9,14 +9,14 @@ only needs to detect position difficulty, not predict full policy/value, so lowe
 capacity suffices. Also takes frozen AZNet intermediate features as input.
 
 Inputs:
-  - obs_grid:        (B, 31, 28, 6)  — PacMan encoded observation
-  - time_vec:        (B, 2)          — [time_seen_frac, time_left_frac]
-  - az_trunk_feats:  (B, 128)        — global-avg-pooled AZNet trunk features (frozen)
-  - az_value:        (B, 1)          — AZNet value estimate (frozen)
+  - obs_grid:        (B, 31, 28, 6)  - PacMan encoded observation
+  - time_vec:        (B, 2)          - [time_seen_frac, time_left_frac]
+  - az_trunk_feats:  (B, 128)        - global-avg-pooled AZNet trunk features (frozen)
+  - az_value:        (B, 1)          - AZNet value estimate (frozen)
 
 Outputs:
-  - logits: (B, 4)  — unnormalized log-probabilities over {K=1, K=2, K=3, K=4}
-  - value:  (B,)    — meta-level value estimate V_gating(s)
+  - logits: (B, 4)  - unnormalized log-probabilities over {K=1, K=2, K=3, K=4}
+  - value:  (B,)    - meta-level value estimate V_gating(s)
 """
 
 from __future__ import annotations
@@ -61,14 +61,14 @@ class _ResBlockV2_LN(hk.Module):
 # ---------------------------------------------------------------------------
 
 class GatingNet(hk.Module):
-    """CNN gating network that chooses MCTS depth option K ∈ {1, 2, 3, 4}.
+    """CNN gating network that chooses MCTS depth option K in {1, 2, 3, 4}.
 
     Lighter than AZNet: 64 channels, 3 ResBlocks (vs 128ch, 6 blocks).
     Uses LayerNorm (no running stats). Fuses frozen AZNet trunk features
     and value estimate to inform the gating decision.
     """
 
-    NUM_GATING_OPTIONS = 4   # K ∈ {1, 2, 3, 4}
+    NUM_GATING_OPTIONS = 4   # K in {1, 2, 3, 4}
 
     def __init__(
         self,
@@ -93,8 +93,8 @@ class GatingNet(hk.Module):
     ) -> Tuple[jnp.ndarray, jnp.ndarray]:
         """
         Returns:
-            logits: (B, 4) — one logit per K option
-            value:  (B,)   — gating value estimate
+            logits: (B, 4) - one logit per K option
+            value:  (B,)   - gating value estimate
         """
         obs_grid = obs_grid.astype(jnp.float32)
         time_vec = time_vec.astype(jnp.float32)
@@ -108,14 +108,14 @@ class GatingNet(hk.Module):
         x = hk.LayerNorm(axis=-1, create_scale=True, create_offset=True)(x)
         x = jax.nn.relu(x)
 
-        # Time embedding: (B, 2) → (B, num_channels), broadcast + add to spatial trunk
+        # Time embedding: (B, 2) -> (B, num_channels), broadcast + add to spatial trunk
         t = hk.Linear(self.time_embed_dim)(time_vec)
         t = jax.nn.relu(t)
         t = hk.Linear(self.num_channels)(t)
         t = jax.nn.relu(t)
         x = x + t[:, None, None, :]  # (B, H, W, num_channels)
 
-        # Global average pool own spatial features → (B, num_channels)
+        # Global average pool own spatial features -> (B, num_channels)
         x_pool = x.mean(axis=(1, 2))
 
         # Ensure az_value is (B, 1)

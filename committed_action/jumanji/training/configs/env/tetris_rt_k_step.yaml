@@ -19,5 +19,5 @@ az:
     num_channels: 128
     num_blocks: 6
     time_embed_dim: 32
-    action_delay: 1     # K=1 → no delay. Set to K for K-step action delay.
+    action_delay: 1     # K=1 -> no delay. Set to K for K-step action delay.
                         # Unlike plain tetris_rt, this IS applied in MCTS tree expansion.

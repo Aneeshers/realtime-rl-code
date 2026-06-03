@@ -1,5 +1,5 @@
 #!/bin/bash
-# Download the canonical checkpoint bundle from the anonymous Google Drive folder
+# Download the checkpoint bundle from the Google Drive mirror
 # and place it under ./checkpoints/.
 #
 # After this script completes, ./checkpoints/ should contain:

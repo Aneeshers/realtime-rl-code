@@ -1,16 +1,16 @@
 # Pinned to the versions used for the paper experiments.
 # JAX/jaxlib must match your CUDA version; the lines below are CUDA 12.x defaults.
 
-jax==0.4.30
-jaxlib==0.4.30
-chex==0.1.86
-optax==0.2.3
-flax==0.8.5
-dm-haiku==0.0.13
+jax==0.6.2
+jaxlib==0.6.2
+chex==0.1.90
+optax==0.1.9
+flax==0.10.7
+dm-haiku==0.0.15
 mctx==0.0.5
 
 # Environments
-pgx==2.4.0
+pgx==2.6.0
 
 # Jumanji vendored under committed_action/; its own runtime deps:
 hydra-core>=1.3

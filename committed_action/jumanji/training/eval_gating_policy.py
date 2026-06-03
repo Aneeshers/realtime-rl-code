@@ -49,7 +49,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 
-# ── Argument parsing ──────────────────────────────────────────────────────────
+# -- Argument parsing ----------------------------------------------------------
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
@@ -77,7 +77,7 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# -- Helpers -------------------------------------------------------------------
 
 def load_gating_checkpoint(path: str) -> GatingParamsState:
     with open(path, "rb") as f:
@@ -93,7 +93,7 @@ def mean_se(arr: np.ndarray) -> Tuple[float, float]:
     return m, se
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# -- Main ----------------------------------------------------------------------
 
 def main():
     args = parse_args()
@@ -113,7 +113,7 @@ def main():
 
     logger.info(f"JAX devices: {jax.devices()}")
 
-    # ── W&B ──
+    # -- W&B --
     run_name = os.path.basename(os.path.dirname(args.gating_checkpoint_path))
     if not args.no_wandb:
         wandb.init(
@@ -123,12 +123,12 @@ def main():
             name=f"eval_{run_name}",
         )
 
-    # ── Environment + agents ──
+    # -- Environment + agents --
     raw_env = jumanji.make("PacManKT-v1")
     eval_env = VmapAutoResetWrapper(raw_env)
     agents = make_agents(eval_env, args.eval_num_envs, args.sim_options)
 
-    # ── Load checkpoints ──
+    # -- Load checkpoints --
     az_params_state = jax.device_put(load_az_checkpoint(args.az_checkpoint_path))
     gating_state = load_gating_checkpoint(args.gating_checkpoint_path)
     gating_params = gating_state.params
@@ -136,7 +136,7 @@ def main():
 
     B = args.eval_num_envs
 
-    # ── JIT eval: mirrors jit_eval from training ──────────────────────────────
+    # -- JIT eval: mirrors jit_eval from training ------------------------------
     # Used for baselines (force_k) and gating summary (force_k=-1).
     # Always accumulates raw (undiscounted) episode return.
     @functools.partial(jax.jit, static_argnames=("greedy", "random_policy", "force_k"))
@@ -204,7 +204,7 @@ def main():
         (_, _, raw_ret, _, _, k_cnt), _ = jax.lax.scan(scan_body, init_carry, step_keys)
         return raw_ret, k_cnt
 
-    # ── Detailed eval: per-step context tracking ──────────────────────────────
+    # -- Detailed eval: per-step context tracking ------------------------------
     # Returns per-step arrays for K choice, ghost distance, pellet fraction, etc.
     # Always uses greedy K selection.
     @jax.jit
@@ -214,7 +214,7 @@ def main():
 
         def scan_body(carry, step_key):
             states, obs, raw_ret, done, k_cnt = carry
-            active_mask = ~done  # (B,) — was episode alive at START of this step
+            active_mask = ~done  # (B,) - was episode alive at START of this step
 
             obs_grid, time_vec = agents[0]._get_grid_and_time(states, obs)
             invalid = agents[0]._get_invalid_actions(agents[0].raw_env_train, states, obs)
@@ -229,8 +229,8 @@ def main():
 
             # Context at decision point from env State.
             # ghost_locations: (B, 4, 2) in (col=y, row=x) convention.
-            ghost_col = states.ghost_locations[:, :, 0]  # (B, 4) — y coordinate
-            ghost_row = states.ghost_locations[:, :, 1]  # (B, 4) — x coordinate
+            ghost_col = states.ghost_locations[:, :, 0]  # (B, 4) - y coordinate
+            ghost_row = states.ghost_locations[:, :, 1]  # (B, 4) - x coordinate
             player_col = states.player_locations.y[:, None]  # (B, 1)
             player_row = states.player_locations.x[:, None]  # (B, 1)
             ghost_dists = (jnp.abs(ghost_col - player_col) +
@@ -288,7 +288,7 @@ def main():
         )
         return raw_ret, k_cnt, step_data
 
-    # ── Batch-run helpers ─────────────────────────────────────────────────────
+    # -- Batch-run helpers -----------------------------------------------------
 
     def run_jit_eval(n_episodes, force_k=-1, random_policy=False, greedy=True):
         """Run n_episodes with jit_eval; returns (returns array, k_cnt array)."""
@@ -322,16 +322,16 @@ def main():
             all_returns.append(np.array(raw_ret))
             all_step_data.append(jax.tree_util.tree_map(np.array, step_data))
         returns = np.concatenate(all_returns)[:n_episodes]
-        # Concatenate episodes along axis=1 (T, B) → (T, n_episodes)
+        # Concatenate episodes along axis=1 (T, B) -> (T, n_episodes)
         step_data_all = jax.tree_util.tree_map(
             lambda *xs: np.concatenate(xs, axis=1)[:, :n_episodes],
             *all_step_data,
         )
         return returns, step_data_all
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 1. MCTS Timing Benchmark
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     logger.info("=== MCTS Timing Benchmark ===")
 
     # Create a small batch of states for timing
@@ -376,7 +376,7 @@ def main():
         fps    = K / mean_t   # K env frames processed per MCTS call
         timing_results[K] = {"sims": sims, "mean_ms": mean_t * 1000,
                               "std_ms": std_t * 1000, "fps": fps}
-        logger.info(f"  K={K} sims={sims}: {mean_t*1000:.1f} ± {std_t*1000:.1f} ms  →  {fps:.1f} frames/s")
+        logger.info(f"  K={K} sims={sims}: {mean_t*1000:.1f} ± {std_t*1000:.1f} ms  ->  {fps:.1f} frames/s")
 
     print("\n  K  sims  t_mean(ms)  t_std(ms)  eff_fps")
     print("  " + "-" * 44)
@@ -384,9 +384,9 @@ def main():
         print(f"  {K}   {tr['sims']:3d}    {tr['mean_ms']:7.1f}    {tr['std_ms']:6.1f}   {tr['fps']:7.1f}")
     print()
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 2. Fixed-K Baselines
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     logger.info("=== Baselines ===")
     baseline_results: Dict[str, dict] = {}
 
@@ -402,9 +402,9 @@ def main():
     baseline_results["random"] = {"mean": m, "se": se}
     logger.info(f"  random: {m:.1f} ± {se:.1f}")
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # 3. Gating Policy — Summary
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
+    # 3. Gating Policy - Summary
+    # ===========================================================================
     logger.info("=== Gating Policy (summary) ===")
     gating_returns, gating_kcnt = run_jit_eval(args.n_episodes, force_k=-1)
     gating_mean, gating_se = mean_se(gating_returns)
@@ -413,15 +413,15 @@ def main():
     logger.info(f"  return: {gating_mean:.1f} ± {gating_se:.1f}")
     logger.info(f"  K_pct:  {np.round(k_dist_pct, 1)}")
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # 4. Gating Policy — Detailed Per-Step
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
+    # 4. Gating Policy - Detailed Per-Step
+    # ===========================================================================
     logger.info("=== Gating Policy (detailed) ===")
     gating_det_returns, step_data = run_detailed(args.n_episodes)
     gating_det_mean, gating_det_se = mean_se(gating_det_returns)
     logger.info(f"  detailed return: {gating_det_mean:.1f} ± {gating_det_se:.1f}")
 
-    # Unpack step_data — each array is (T, N) where T=eval_meta_steps, N=n_episodes
+    # Unpack step_data - each array is (T, N) where T=eval_meta_steps, N=n_episodes
     T, N = step_data["active"].shape
     active       = step_data["active"].astype(bool)        # (T, N)
     k_choices    = step_data["k_choices"]                  # (T, N)
@@ -438,9 +438,9 @@ def main():
     ])
     logger.info(f"  global K_pct (detailed): {np.round(global_k_pct, 1)}")
 
-    # ── Per-step statistics (vectorised) ──────────────────────────────────────
+    # -- Per-step statistics (vectorised) --------------------------------------
     act_count = active.sum(axis=1)           # (T,) number of still-active episodes
-    valid_t   = act_count > 1               # (T,) bool — enough episodes for SE
+    valid_t   = act_count > 1               # (T,) bool - enough episodes for SE
 
     # Mean sims chosen per step
     sims_sum    = (sims_chosen * active).sum(axis=1).astype(float)
@@ -460,7 +460,7 @@ def main():
         k_count = (active & (k_choices == k)).sum(axis=1).astype(float)
         step_k_frac[:, k] = np.where(valid_t, k_count / np.maximum(act_count, 1), np.nan)
 
-    # ── Context stats conditioned on K choice ─────────────────────────────────
+    # -- Context stats conditioned on K choice ---------------------------------
     flat_active   = active.flatten()
     flat_k        = k_choices.flatten()
     flat_ghost    = min_ghost.flatten().astype(float)
@@ -499,9 +499,9 @@ def main():
         m, se = frightened_by_k[k]
         logger.info(f"  K={k+1}: {m*100:.1f}% ± {se*100:.1f}%")
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 5. Plots
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     COLORS   = ["#4C72B0", "#DD8452", "#55A868", "#C44E52", "#8172B2", "#777777"]
     K_LABELS = ["K=1 (32)", "K=2 (64)", "K=3 (96)", "K=4 (128)"]
     k_short  = ["K=1", "K=2", "K=3", "K=4"]
@@ -551,7 +551,7 @@ def main():
     plt.savefig(os.path.join(args.output_dir, "per_step_sims.png"), dpi=150)
     plt.close()
 
-    # Plot 3: Stacked area — K fraction per step
+    # Plot 3: Stacked area - K fraction per step
     fig, ax = plt.subplots(figsize=(11, 4))
     bottoms = np.zeros(len(valid_idx))
     for k in range(4):
@@ -636,9 +636,9 @@ def main():
 
     logger.info(f"All plots saved to {args.output_dir}/")
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 6. Summary JSON
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     summary = {
         "n_episodes": args.n_episodes,
         "gating_checkpoint": args.gating_checkpoint_path,
@@ -674,9 +674,9 @@ def main():
         json.dump(summary, f, indent=2)
     logger.info(f"Results saved to {json_path}")
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 7. W&B Logging
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     if not args.no_wandb:
         log_dict = {
             "gating/mean_return":    gating_mean,

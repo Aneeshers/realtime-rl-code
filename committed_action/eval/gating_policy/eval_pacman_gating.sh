@@ -6,7 +6,7 @@ cd "$(dirname "$0")/../../.."
 
 CKPT_ROOT=${CKPT_ROOT:-./checkpoints/committed_action/pacman}
 GATING_CKPT=${GATING_CKPT:-${CKPT_ROOT}/gating/gating_state_best.pkl}
-AZ_CKPT=${AZ_CKPT:-${CKPT_ROOT}/base/k1/training_state_best.pkl}
+AZ_CKPT=${AZ_CKPT:-${CKPT_ROOT}/base/training_state_best.pkl}
 OUTPUT_DIR=${OUTPUT_DIR:-./eval_outputs/pacman_gating}
 
 mkdir -p "${OUTPUT_DIR}"

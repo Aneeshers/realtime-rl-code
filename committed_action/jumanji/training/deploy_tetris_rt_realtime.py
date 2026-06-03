@@ -6,11 +6,11 @@ True two-GPU real-time deployment at a configurable FPS.  Supports Tetris, Pacma
   GPU 0: env stepping + reflex policy (committed actions) + gating network
   GPU 1: MCTS planner (async, via background thread)
 
-At each meta-step the gating policy chooses K ∈ {1,2,3,4}.  While MCTS runs K×32 sims
+At each meta-step the gating policy chooses K in {1,2,3,4}.  While MCTS runs Kx32 sims
 on GPU 1, the environment advances K-1 committed actions (argmax policy logits) on GPU 0 at
 the target frame rate.  The MCTS result is applied on the K-th frame.
 
-At 9 FPS: frame = 111ms, K=4 → budget = 444ms for 128 sims.
+At 9 FPS: frame = 111ms, K=4 -> budget = 444ms for 128 sims.
 
 Batch size note: JAX requires total_batch_size % num_devices == 0.  With two GPUs visible,
 the minimum valid batch size is 2.  We run B=2 envs simultaneously; K is driven by env 0's
@@ -73,7 +73,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--gpu_type", default="h100", choices=["h100", "a100", "a40"],
                    help="GPU label used for output path and WandB run name.")
     p.add_argument("--env_name", default=None,
-                   help="Jumanji env ID. Defaults to the canonical env for --game.")
+                   help="Jumanji env ID. Defaults to the standard env for --game.")
     p.add_argument("--fps", type=float, default=9.0,
                    help="Target game speed in frames/second (default: 9).")
     p.add_argument("--n_episodes", type=int, default=100)
@@ -92,7 +92,7 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-# ── Build per-K MCTS JIT functions (inputs expected on gpu1) ─────────────────
+# -- Build per-K MCTS JIT functions (inputs expected on gpu1) -----------------
 
 def _build_mcts_jits(agents, az_p1, az_s1, k_options) -> Dict[int, Any]:
     mcts_jits: Dict[int, Any] = {}
@@ -117,12 +117,12 @@ def _build_mcts_jits(agents, az_p1, az_s1, k_options) -> Dict[int, Any]:
     return mcts_jits
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# -- Main ----------------------------------------------------------------------
 
 def main() -> None:
     args = parse_args()
 
-    # ── Resolve game-specific defaults ───────────────────────────────────────
+    # -- Resolve game-specific defaults ---------------------------------------
     if args.env_name is None:
         args.env_name = _GAME_ENV_NAME[args.game]
     fps_int = int(args.fps) if args.fps == int(args.fps) else args.fps
@@ -131,7 +131,7 @@ def main() -> None:
             _DEPLOY_ROOT, "rt_deploy_out", args.game, args.gpu_type, f"fps_{fps_int}"
         )
 
-    # ── Import game-specific training module ─────────────────────────────────
+    # -- Import game-specific training module ---------------------------------
     _mod = importlib.import_module(_GAME_MODULE[args.game])
     load_az_checkpoint = _mod.load_az_checkpoint
     make_agents        = _mod.make_agents
@@ -143,11 +143,11 @@ def main() -> None:
 
     FRAME_S = 1.0 / args.fps
     logger.info(f"Game: {args.game}  GPU: {args.gpu_type}  Env: {args.env_name}")
-    logger.info(f"Target: {args.fps} FPS  →  frame = {FRAME_S*1000:.1f} ms")
+    logger.info(f"Target: {args.fps} FPS  ->  frame = {FRAME_S*1000:.1f} ms")
     logger.info(f"K=4 budget: {4*FRAME_S*1000:.1f} ms  (4 frames)")
     logger.info(f"Output dir: {args.output_dir}")
 
-    # ── W&B ──────────────────────────────────────────────────────────────────
+    # -- W&B ------------------------------------------------------------------
     run_name = f"{args.game}_{args.gpu_type}_fps{fps_int}_seed{args.seed}"
     if not args.no_wandb:
         wandb.init(
@@ -168,7 +168,7 @@ def main() -> None:
             name=run_name,
         )
 
-    # ── Device setup ──────────────────────────────────────────────────────────
+    # -- Device setup ----------------------------------------------------------
     gpus = jax.devices("gpu")
     if len(gpus) < 2:
         raise RuntimeError(f"Two GPUs required, found {len(gpus)}: {gpus}")
@@ -176,14 +176,14 @@ def main() -> None:
     logger.info(f"GPU 0 (env + reflex + gating): {gpu0}")
     logger.info(f"GPU 1 (MCTS planner):          {gpu1}")
 
-    # ── Environment (B=_BATCH) ────────────────────────────────────────────────
+    # -- Environment (B=_BATCH) ------------------------------------------------
     # B=2 satisfies total_batch_size % jax.local_device_count() == 0.
     # Both envs run independently; K is driven by env 0's gating choice.
     raw_env = jumanji.make(args.env_name)
     env     = VmapAutoResetWrapper(raw_env)
     agents  = make_agents(env, num_envs=_BATCH, sim_options=args.sim_options)
 
-    # ── Checkpoints ───────────────────────────────────────────────────────────
+    # -- Checkpoints -----------------------------------------------------------
     az_state     = load_az_checkpoint(args.az_checkpoint_path)
     gating_state = load_gating_checkpoint(args.gating_checkpoint_path)
     gating_fwd   = make_gating_forward()
@@ -195,7 +195,7 @@ def main() -> None:
 
     gating_params = jax.device_put(gating_state.params, gpu0)
 
-    # ── GPU 0 JIT functions ───────────────────────────────────────────────────
+    # -- GPU 0 JIT functions ---------------------------------------------------
 
     @jax.jit
     def env_step_jit(state, action):
@@ -220,10 +220,10 @@ def main() -> None:
         logits, _ = gating_fwd.apply(gating_params, obs_grid, time_vec, az_trunk, az_val_2d)
         return jnp.argmax(logits, axis=-1)  # (B,)
 
-    # ── GPU 1 MCTS JIT functions ──────────────────────────────────────────────
+    # -- GPU 1 MCTS JIT functions ----------------------------------------------
     mcts_jits = _build_mcts_jits(agents, az_p1, az_s1, K_OPTIONS)
 
-    # ── Warmup: force JIT compilation before timing ───────────────────────────
+    # -- Warmup: force JIT compilation before timing ---------------------------
     logger.info("Compiling JIT functions (takes a few minutes)...")
     _k0 = jax.random.PRNGKey(0)
     _s0, _ts0 = env.reset(jax.random.split(_k0, _BATCH))
@@ -247,7 +247,7 @@ def main() -> None:
         logger.info(f"  MCTS K={K} (sims={args.sim_options[K-1]}) compiled.")
     logger.info("All JITs compiled.")
 
-    # ── Shared state for the MCTS background thread ───────────────────────────
+    # -- Shared state for the MCTS background thread ---------------------------
     _mcts_result: Dict[str, Any] = {"action": None, "latency_ms": 0.0}
     _mcts_done   = threading.Event()
 
@@ -260,7 +260,7 @@ def main() -> None:
         _mcts_result["latency_ms"] = lat
         _mcts_done.set()
 
-    # ── Episode loop ──────────────────────────────────────────────────────────
+    # -- Episode loop ----------------------------------------------------------
     # Both envs run in parallel.  K is determined by env 0's gating choice.
     # Episode stats (return, K distribution, latency) are tracked for env 0 only.
     all_returns: List[float] = []
@@ -280,7 +280,7 @@ def main() -> None:
         done   = False  # tracks env 0
 
         while not done:
-            # ── Gating (env 0 drives K for both envs) ───────────────────────
+            # -- Gating (env 0 drives K for both envs) -----------------------
             frame_deadline = time.perf_counter() + FRAME_S
 
             obs_grid, time_vec = agents[0]._get_grid_and_time(state, obs)
@@ -290,7 +290,7 @@ def main() -> None:
             K     = K_OPTIONS[k_idx]
             k_counts[k_idx] += 1
 
-            # ── Launch MCTS on GPU 1 (B envs searched simultaneously) ───────
+            # -- Launch MCTS on GPU 1 (B envs searched simultaneously) -------
             rng, mcts_key = jax.random.split(rng)
             inv  = agents[0]._get_invalid_actions(agents[0].raw_env_train, state, obs)
             s1   = jax.device_put(state,    gpu1)
@@ -305,7 +305,7 @@ def main() -> None:
                 daemon=True,
             ).start()
 
-            # ── K-1 committed actions at the target frame rate ───────────────
+            # -- K-1 committed actions at the target frame rate ---------------
             for _ in range(K - 1):
                 time.sleep(max(0.0, frame_deadline - time.perf_counter()))
                 frame_deadline += FRAME_S
@@ -319,7 +319,7 @@ def main() -> None:
                 obs_grid, time_vec = agents[0]._get_grid_and_time(state, obs)
                 logits = az_fwd_jit(obs_grid, time_vec)
 
-            # ── K-th frame: apply MCTS result ────────────────────────────────
+            # -- K-th frame: apply MCTS result --------------------------------
             if not done:
                 time.sleep(max(0.0, frame_deadline - time.perf_counter()))
                 if not _mcts_done.wait(timeout=0.005):
@@ -365,7 +365,7 @@ def main() -> None:
                 f"running_mean={np.mean(all_returns):.1f}"
             )
 
-    # ── Summary ───────────────────────────────────────────────────────────────
+    # -- Summary ---------------------------------------------------------------
     returns_arr   = np.array(all_returns)
     latencies_arr = np.array(mcts_latencies) if mcts_latencies else np.array([0.0])
     k_dist        = k_counts / max(k_counts.sum(), 1)

@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../../.."
 
 CKPT_ROOT=${CKPT_ROOT:-./checkpoints/committed_action/snake}
-AZ_CHECKPOINT_PATH=${AZ_CHECKPOINT_PATH:-${CKPT_ROOT}/base/k3/training_state_best.pkl}
+AZ_CHECKPOINT_PATH=${AZ_CHECKPOINT_PATH:-${CKPT_ROOT}/base/training_state_best.pkl}
 GATING_CHECKPOINT_DIR=${GATING_CHECKPOINT_DIR:-${CKPT_ROOT}/gating}
 SEED=${SEED:-1}
 

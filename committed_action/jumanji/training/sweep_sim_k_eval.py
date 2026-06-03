@@ -7,11 +7,11 @@ optionally logged to wandb.
 Array layout (--array=0-47):
     SIM_VALUES = [2, 4, 8, 16, 32, 64, 128, 256]   (8 values)
     K_VALUES   = [1, 2, 3, 4, 5, 6]                 (6 values)
-    job_id → k_idx = job_id // 8,  sims_idx = job_id % 8
+    job_id -> k_idx = job_id // 8,  sims_idx = job_id % 8
 
 Uses eval_one_episode_kt (while_loop until done) for unbiased full-episode returns.
 The gating training's jit_eval caps at eval_meta_steps=500 meta-steps which truncates
-K=1 episodes (time_limit=1000 real steps → 1000 meta-steps for K=1) and inflates
+K=1 episodes (time_limit=1000 real steps -> 1000 meta-steps for K=1) and inflates
 K=1 returns. This sweep uses full episodes so numbers are directly interpretable.
 """
 
@@ -136,10 +136,10 @@ def main():
                     "seed": args.seed},
         )
 
-    # ── Environment ──
+    # -- Environment --
     raw_env = jumanji.make("PacManKT-v1")
 
-    # ── Agent for this (K, sims) pair ──
+    # -- Agent for this (K, sims) pair --
     wrapped_env = VmapAutoResetWrapper(raw_env)
     agent = GumbelAlphaZeroAgent(
         env=wrapped_env,
@@ -154,11 +154,11 @@ def main():
         pacman_action_delay=K,
     )
 
-    # ── Load frozen AZNet ──
+    # -- Load frozen AZNet --
     params_state = load_az_checkpoint(args.az_checkpoint_dir)
     params_state = jax.device_put(params_state)
 
-    # ── Batched eval via vmap over episodes ──
+    # -- Batched eval via vmap over episodes --
     key = jax.random.PRNGKey(args.seed)
     eval_keys = jax.random.split(key, args.eval_batch_size)
 

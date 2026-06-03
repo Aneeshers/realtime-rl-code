@@ -2,11 +2,11 @@
 Cross-model evaluation for SnakeKT Gumbel-AlphaZero.
 
 For a model trained with K_model action delay, evaluate it at every combination of:
-  - K_eval  ∈ args.k_eval_list   (test-time action delay)
-  - num_sims ∈ args.sims_list    (MCTS simulation budget)
+  - K_eval  in args.k_eval_list   (test-time action delay)
+  - num_sims in args.sims_list    (MCTS simulation budget)
 
 SnakeKT uses policy-guided delay steps rather than a no-op:
-  - K_eval-1 "delay" steps: argmax(masked_policy_logits) — no MCTS, direct network call
+  - K_eval-1 "delay" steps: argmax(masked_policy_logits) - no MCTS, direct network call
   - 1 final step: action chosen by full MCTS
   - MCTS tree also uses the same policy-guided K_eval-step dynamics
 
@@ -52,9 +52,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Robust checkpoint loading
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 
 
 def load_checkpoint(checkpoint_path: str) -> TrainingState:
@@ -97,9 +97,9 @@ def load_checkpoint(checkpoint_path: str) -> TrainingState:
     return training_state
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Core eval: single episode with policy-guided delay steps and raw reward
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 
 
 def eval_one_episode_kt(
@@ -129,7 +129,7 @@ def eval_one_episode_kt(
         eval_env:     Raw (unwrapped) SnakeKT environment.
         params_state: Checkpoint parameters (single-device, pmap axis stripped).
         key:          JAX PRNGKey.
-        k_eval:       Python int — number of env steps per agent decision.
+        k_eval:       Python int - number of env steps per agent decision.
 
     Returns:
         Dict with "episode_return" (raw) and "episode_length" (in env steps).
@@ -160,7 +160,7 @@ def eval_one_episode_kt(
         def delay_step(carry, _):
             s, ts, cum_r, early_done = carry
             obs = ts.observation
-            # Snake observation already has obs.grid (H, W, 5) — no special encoding needed
+            # Snake observation already has obs.grid (H, W, 5) - no special encoding needed
             grid_b = obs.grid[None, ...]                               # (1, H, W, 5)
             time_b = agent._time_features(jnp.array([s.step_count]))  # (1, 2)
             (logits, _), _ = agent.forward.apply(
@@ -171,7 +171,7 @@ def eval_one_episode_kt(
                 is_eval=True,
             )
             # Apply Snake action mask before argmax
-            invalid = ~obs.action_mask  # (4,) — True where action is invalid
+            invalid = ~obs.action_mask  # (4,) - True where action is invalid
             masked_logits = jnp.where(~invalid, logits[0], jnp.finfo(logits.dtype).min)
             a = jnp.argmax(masked_logits).astype(jnp.int32)
 
@@ -243,9 +243,9 @@ def eval_one_episode_kt(
     return eval_metrics
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Batch evaluation
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 
 
 def run_batch_eval(
@@ -280,15 +280,15 @@ def run_batch_eval(
     return mean_metrics, time_per_episode
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Main
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="Cross-model SnakeKT evaluation: load K_model checkpoint, "
-                    "evaluate over K_eval × num_sims grid. "
+                    "evaluate over K_eval x num_sims grid. "
                     "Delay steps use argmax(masked_policy_logits) instead of no-op."
     )
     parser.add_argument(
@@ -331,7 +331,7 @@ def main():
     parser.add_argument("--wandb_project", type=str, default="snake_kt_cross_eval")
     parser.add_argument("--wandb_entity", type=str, default=None)
 
-    # Network architecture — must match training config
+    # Network architecture - must match training config
     parser.add_argument("--num_channels", type=int, default=128)
     parser.add_argument("--num_blocks", type=int, default=6)
     parser.add_argument("--time_embed_dim", type=int, default=32)
@@ -352,7 +352,7 @@ def main():
         training_state.params_state,
     )
 
-    # ── Build environment and agent ──────────────────────────────────────────
+    # -- Build environment and agent ------------------------------------------
     env = jumanji.make("SnakeKT-v1")
     wrapped_env = VmapAutoResetWrapper(env)
 
@@ -434,7 +434,7 @@ def main():
             wandb.finish()
             all_results.append(log_data)
 
-    # ── Summary run ──────────────────────────────────────────────────────────
+    # -- Summary run ----------------------------------------------------------
     logger.info(f"\n{'='*60}\nCreating summary run for k_model={args.k_model}\n{'='*60}")
 
     wandb.init(

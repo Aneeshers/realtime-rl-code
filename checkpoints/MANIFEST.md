@@ -1,8 +1,8 @@
 # Checkpoint manifest
 
-The released bundle ships **one canonical (base planner + gating policy)
-checkpoint per environment**, totalling ≈ 200 MB. After running
-`scripts/download_checkpoints.sh`, this directory is populated as follows.
+One base planner + one gating policy checkpoint per environment, about 200 MB
+total, stored with git lfs. A clone (with git lfs installed) populates this
+directory as follows.
 
 ## Committed-action (Jumanji)
 
@@ -19,10 +19,11 @@ checkpoint per environment**, totalling ≈ 200 MB. After running
 
 | Path | Phase | Notes |
 |--|--|--|
-| `clock/hex/base/000800.ckpt` | AlphaZero | nsim=32, seed=3 |
-| `clock/hex/gating/gate_001000.pkl` | PPO gating | options = {2,8,32,128}, seed=1 |
-| `clock/go/base/000800.ckpt` | AlphaZero | 9×9, nsim=16, seed=0 |
-| `clock/go/gating/gate_periodic_000275.pkl` | PPO gating | options = {16,32,64,96}, seed=0 |
+| `clock/hex/base/base_planner.ckpt` | AlphaZero | 11x11, nsim=32 |
+| `clock/hex/gating/gate.pkl` | PPO gating (GRU) | options = {2,8,32,128} |
+| `clock/hex/gating_timeout/gate.pkl` | PPO gating (GRU, strict-timeout) | options = {2,8,32,128}; pairs with `clock/hex/base`; backs Appendix H |
+| `clock/go/base/base_planner.ckpt` | AlphaZero | 9x9, nsim=16 |
+| `clock/go/gating/gate.pkl` | PPO gating (GRU) | options = {16,32,64,96} |
 
 ## Notes
 

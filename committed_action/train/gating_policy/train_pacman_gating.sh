@@ -8,7 +8,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../../.."
 
 CKPT_ROOT=${CKPT_ROOT:-./checkpoints/committed_action/pacman}
-AZ_CHECKPOINT_DIR=${AZ_CHECKPOINT_DIR:-${CKPT_ROOT}/base/k1}
+AZ_CHECKPOINT_DIR=${AZ_CHECKPOINT_DIR:-${CKPT_ROOT}/base}
 GATING_CHECKPOINT_DIR=${GATING_CHECKPOINT_DIR:-${CKPT_ROOT}/gating}
 SEED=${SEED:-1}
 

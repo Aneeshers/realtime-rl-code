@@ -195,7 +195,7 @@ class Hex(core.Env):
             ),
         )
 
-        # Illegal action → immediate penalty / terminal (core.Env helper)
+        # Illegal action -> immediate penalty / terminal (core.Env helper)
         state = jax.lax.cond(
             is_illegal,
             lambda: self._step_with_illegal_action(state, current_player),

@@ -6,12 +6,12 @@ rotate CCW, hard drop, noop). This makes a meaningful no-op possible, enabling K
 action delay experiments.
 
 Action index semantics:
-  0: move left     — x -= 1 (silently ignored if it would cause a collision)
-  1: move right    — x += 1 (silently ignored if it would cause a collision)
-  2: rotate CW     — rotation = (rotation + 1) % 4 (silently ignored if invalid)
-  3: rotate CCW    — rotation = (rotation - 1) % 4 (silently ignored if invalid)
-  4: hard drop     — piece falls to its resting position immediately, then locks
-  5: noop          — no horizontal/rotation change; gravity acts as normal
+  0: move left     - x -= 1 (silently ignored if it would cause a collision)
+  1: move right    - x += 1 (silently ignored if it would cause a collision)
+  2: rotate CW     - rotation = (rotation + 1) % 4 (silently ignored if invalid)
+  3: rotate CCW    - rotation = (rotation - 1) % 4 (silently ignored if invalid)
+  4: hard drop     - piece falls to its resting position immediately, then locks
+  5: noop          - no horizontal/rotation change; gravity acts as normal
 
 After every action, gravity tries to advance the piece one row. If gravity is
 blocked (or action=hard_drop), the piece locks: it merges into the board, full
@@ -52,12 +52,12 @@ class TetrisRT(Environment[State, specs.DiscreteArray, Observation]):
     """Real-time Tetris where each step is one gravity tick.
 
     - observation: `Observation`
-        - board: jax array (int32) of shape (num_rows, num_cols) — locked pieces only.
-        - tetromino: jax array (int32) of shape (4, 4) — current falling piece shape.
-        - x_position: int32 () — column of piece's 4×4 bounding-box top-left corner.
-        - y_position: int32 () — row of piece's 4×4 bounding-box top-left corner.
-        - action_mask: bool (6,) — always all-True.
-        - step_count: int32 () — gravity ticks elapsed.
+        - board: jax array (int32) of shape (num_rows, num_cols) - locked pieces only.
+        - tetromino: jax array (int32) of shape (4, 4) - current falling piece shape.
+        - x_position: int32 () - column of piece's 4x4 bounding-box top-left corner.
+        - y_position: int32 () - row of piece's 4x4 bounding-box top-left corner.
+        - action_mask: bool (6,) - always all-True.
+        - step_count: int32 () - gravity ticks elapsed.
 
     - action: DiscreteArray(6)
         0=left, 1=right, 2=rotate_CW, 3=rotate_CCW, 4=hard_drop, 5=noop.
@@ -95,7 +95,7 @@ class TetrisRT(Environment[State, specs.DiscreteArray, Observation]):
         self.TETROMINOES_LIST = jnp.array(TETROMINOES_LIST, jnp.int32)
         self.reward_list = jnp.array(REWARD_LIST, jnp.float32)
 
-        # Spawn position: centre the 4×4 bounding box horizontally
+        # Spawn position: centre the 4x4 bounding box horizontally
         self._spawn_x = int(num_cols // 2 - 2)
         self._spawn_y = 0
 
@@ -392,7 +392,7 @@ class TetrisRT(Environment[State, specs.DiscreteArray, Observation]):
 class TetrisRTKStep(TetrisRT):
     """TetrisRT variant that enables K-step action-delay MCTS in GumbelAlphaZeroAgent.
 
-    Identical to TetrisRT in every way — same observation, action space, reward,
+    Identical to TetrisRT in every way - same observation, action space, reward,
     and episode dynamics.  The distinct class name lets the agent detect this
     variant via isinstance and apply K-step tree expansion in _k_step, using
     action 5 (noop / gravity-only) for the K-1 delay steps.

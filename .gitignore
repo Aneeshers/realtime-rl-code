@@ -1,8 +1,15 @@
 _checkpoint_bundle/
 
-# Keep the checkpoint layout, but ignore downloaded model artifacts.
-checkpoints/**
-!checkpoints/
-!checkpoints/MANIFEST.md
-!checkpoints/**/
-!checkpoints/**/.gitkeep
+# retired checkpoint kept locally only
+checkpoints/clock/hex/gating/_disabled_nongru/
+
+# python
+__pycache__/
+*.py[cod]
+.codex/
+.cursor/
+
+# local run output
+wandb/
+eval_outputs/
+checkpoints/committed_action/rt_deploy_out/

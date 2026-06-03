@@ -1,4 +1,4 @@
-# Learning Planning Budgets for Real-Time RL — Code Release
+# Learning Planning Budgets for Real-Time RL: Code Release
 
 Anonymous NeurIPS 2026 supplementary code for the paper
 **"Learning Planning Budgets for Real-Time RL."**
@@ -10,7 +10,7 @@ at each decision point. Five environments split across two regimes:
 | Regime | Environments | Source |
 |--|--|--|
 | Committed-action (real-time) | Pac-Man, Tetris (real-time), Snake | Jumanji |
-| Clock | Speed Hex (11×11), Speed Go (9×9) | pgx |
+| Clock | Speed Hex (11x11), Speed Go (9x9) | pgx |
 
 Plus a two-GPU real-time deployment for the committed-action environments
 (paper Section 6).
@@ -37,9 +37,9 @@ Plus a two-GPU real-time deployment for the committed-action environments
 │   ├── train/{base_planner, gating_policy}
 │   └── eval/{base_planner,  gating_policy}
 │
-├── checkpoints/               # populated by scripts/download_checkpoints.sh
+├── checkpoints/               # model checkpoints (git lfs)
 ├── scripts/
-│   └── download_checkpoints.sh
+│   └── download_checkpoints.sh  # optional google drive mirror
 ├── requirements.txt
 └── README.md  (this file)
 ```
@@ -65,18 +65,23 @@ execution has not been tested.
 
 ---
 
-## Download checkpoints
+## Checkpoints
 
-We ship one canonical (base planner + gating policy) checkpoint per
-environment. Total bundle is ≈ 200 MB, hosted on an anonymous Google Drive
-folder.
+One base planner + one gating policy checkpoint per environment (about 200 MB
+total), stored in the repo with [Git LFS](https://git-lfs.com). A normal clone
+pulls them:
 
 ```bash
-bash scripts/download_checkpoints.sh
+git lfs install        # one-time
+git clone git@github.com:Aneeshers/realtime-rl-code.git
 ```
 
-After this, `./checkpoints/` mirrors the layout the launcher scripts expect.
-See `checkpoints/MANIFEST.md` for per-file provenance.
+If you cloned before installing LFS (so `checkpoints/*.pkl` are pointer stubs),
+run `git lfs pull`.
+
+`./checkpoints/` then matches the layout the launcher scripts expect. See
+`checkpoints/MANIFEST.md` for the file list. `scripts/download_checkpoints.sh`
+is an optional Google Drive mirror of the same files.
 
 ---
 
@@ -92,7 +97,7 @@ numbers when paired with the shipped checkpoints.
 bash committed_action/eval/gating_policy/eval_pacman_gating.sh
 ```
 
-Expected: ≈ 2370 mean episode return (vs. 2149 for the best fixed-K
+Expected: ~2370 mean episode return (vs. 2149 for the best fixed-K
 baseline; paper Section 5).
 
 ### Real-time Tetris
@@ -101,7 +106,7 @@ baseline; paper Section 5).
 bash committed_action/eval/gating_policy/eval_tetris_gating.sh
 ```
 
-Expected: ≈ 45.6 mean (vs. 27.6 fixed-K).
+Expected: ~45.6 mean (vs. 27.6 fixed-K).
 
 ### Snake
 
@@ -109,7 +114,7 @@ Expected: ≈ 45.6 mean (vs. 27.6 fixed-K).
 bash committed_action/eval/gating_policy/eval_snake_gating.sh
 ```
 
-Expected: ≈ 16.5 mean (vs. 14.9 fixed-K).
+Expected: ~16.5 mean (vs. 14.9 fixed-K).
 
 ### Speed Hex (clock)
 
@@ -117,8 +122,8 @@ Expected: ≈ 16.5 mean (vs. 14.9 fixed-K).
 bash clock/eval/gating_policy/eval_hex_gating.sh
 ```
 
-Expected: averaged over `T ∈ {300, 1200, 2300, 3500, 4100}`, expected
-score ≈ 0.58 (vs. 0.43 fixed-K, 0.46 greedy).
+Expected: averaged over `T in {300, 1200, 2300, 3500, 4100}`, expected
+score ~0.58 (vs. 0.43 fixed-K, 0.46 greedy).
 
 ### Speed Go (clock)
 
@@ -126,8 +131,14 @@ score ≈ 0.58 (vs. 0.43 fixed-K, 0.46 greedy).
 bash clock/eval/gating_policy/eval_go_gating.sh
 ```
 
-Expected: same clock budgets, expected score ≈ 0.59 (vs. 0.51 fixed-K, 0.50
+Expected: same clock budgets, expected score ~0.59 (vs. 0.51 fixed-K, 0.50
 midpeak).
+
+Fixed-budget baseline bars for both clock games come from
+`clock/eval/gating_policy/eval_clock_baselines.sh` (`ENV_KIND=hex` or `go`),
+which re-runs the eval with `--force_gate_choice` set to each budget. The
+greedy/midpeak heuristics run as opponents only
+(`--opponents ...,midpeak,proportional`), not as the evaluated player.
 
 ### Speed Hex strict-timeout (appendix)
 
@@ -135,11 +146,24 @@ midpeak).
 bash clock/eval/gating_policy/eval_hex_gating_timeout.sh
 ```
 
-Backs the appendix control where running out of time = immediate loss.
+Backs the appendix control (Appendix H) where running out of time = immediate
+loss. Uses the shipped strict-timeout gate
+(`clock/hex/gating_timeout/gate.pkl`) paired with the
+same `clock/hex/base` AlphaZero planner, and evaluates against the
+`midpeak` / `proportional` heuristic opponents reported in the appendix.
 
 ### Two-GPU real-time deployment (Section 6)
 
-Requires two visible GPUs:
+Requires two visible GPUs. Each committed-action game has a per-game launcher
+(thin wrappers over `deploy.sh`):
+
+```bash
+FPS=9 bash committed_action/deployment/deploy_tetris.sh
+FPS=9 bash committed_action/deployment/deploy_pacman.sh
+FPS=9 bash committed_action/deployment/deploy_snake.sh
+```
+
+Equivalently, drive the generic launcher directly:
 
 ```bash
 GAME=tetris FPS=9 bash committed_action/deployment/deploy.sh
@@ -148,7 +172,14 @@ GAME=snake  FPS=9 bash committed_action/deployment/deploy.sh
 ```
 
 The single Python entrypoint `jumanji.training.deploy_tetris_rt_realtime`
-handles all three games via `--game`.
+handles all three games via `--game` (`TetrisRTKT-v0`, `PacManKT-v1`,
+`SnakeKT-v1`).
+
+The released deployment is configured and verified for **H100** GPUs (the
+default `GPU_TYPE=h100`). The paper also reports A100 and A40 results; if you
+want to reproduce those, you can configure other GPU classes yourself by
+overriding `GPU_TYPE` (and adjusting the `FPS` sweep to taste) - those paths
+are left unsupported here.
 
 ---
 
@@ -190,8 +221,10 @@ Each launcher exposes hyperparameters via env vars (`SEED`, `NUM_EPOCHS`,
 * `clock/eval/base_planner/tournament.py` performs a head-to-head sweep
   rather than reproducing a specific paper table; it is included for
   completeness of base-planner evaluation.
-* W&B logging is disabled by default. Set `WANDB_MODE=online` and
-  `WANDB_ENTITY` / `WANDB_PROJECT` to opt in.
+* W&B logging is on by default. Committed-action evaluators and deploy scripts
+  log unless you pass `--no_wandb`; clock evaluators default to
+  `--wandb_mode online` (pass `--wandb_mode disabled` to turn off). Set the
+  `WANDB_ENTITY` / `WANDB_PROJECT` env vars to control where runs land.
 
 ---
 

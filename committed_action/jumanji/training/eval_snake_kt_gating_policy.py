@@ -1,7 +1,7 @@
 """Standalone evaluation script for the SnakeKT adaptive gating policy.
 
 Evaluates a trained gating checkpoint against fixed-K baselines, reporting:
-  - Mean ± SE raw episode return over N episodes
+  - Mean +/- SE raw episode return over N episodes
   - MCTS inference time and effective frames/second per (K, sims) pair
   - Per-step K/sims distribution over episode progression (mean + SE fill)
   - Snake length and board fill fraction conditioned on K choice
@@ -12,8 +12,8 @@ Evaluates a trained gating checkpoint against fixed-K baselines, reporting:
   - Flood-fill reachability from head by K (prospective constraint)
 
 Snake-specific context analogues to PacMan/Tetris:
-  snake_length  ↔  stack_height   (danger level — longer snake = harder to navigate)
-  board_fill    ↔  board_fill     (overall board density = snake_length / total_cells)
+  snake_length  <->  stack_height   (danger level - longer snake = harder to navigate)
+  board_fill    <->  board_fill     (overall board density = snake_length / total_cells)
 
 Usage:
   python -m jumanji.training.eval_snake_kt_gating_policy \\
@@ -57,7 +57,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 
-# ── Argument parsing ──────────────────────────────────────────────────────────
+# -- Argument parsing ----------------------------------------------------------
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
@@ -84,7 +84,7 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# -- Helpers -------------------------------------------------------------------
 
 def load_gating_checkpoint(path: str) -> GatingParamsState:
     with open(path, "rb") as f:
@@ -106,14 +106,14 @@ def compute_local_density(
     head_col: np.ndarray,
     radius: int = 1,
 ) -> np.ndarray:
-    """Fraction of (2r+1)² neighborhood cells occupied by snake body.
+    """Fraction of (2r+1)^2 neighborhood cells occupied by snake body.
 
-    Uses a summed-area table so the per-step cost is O(H*W), not O(r²) per cell.
+    Uses a summed-area table so the per-step cost is O(H*W), not O(r^2) per cell.
 
     body_grid : (T, B, H, W) bool
     head_row  : (T, B) int32
     head_col  : (T, B) int32
-    Returns   : (T, B) float32 — density in [0, 1]
+    Returns   : (T, B) float32 - density in [0, 1]
     """
     T, B, H, W = body_grid.shape
     side = 2 * radius + 1
@@ -159,14 +159,14 @@ def compute_reachability(
     Processes all (T, B) grids in a single vectorised BFS; terminates early
     when no new cells are discovered (at most H+W expansions needed).
 
-    body_grid : (T, B, H, W) bool  — True = body cell (obstacle)
+    body_grid : (T, B, H, W) bool  - True = body cell (obstacle)
     head_row  : (T, B) int32
     head_col  : (T, B) int32
-    Returns   : (T, B) int32 — reachable cell count (≥ 1, includes head)
+    Returns   : (T, B) int32 - reachable cell count (>= 1, includes head)
     """
     T, B, H, W = body_grid.shape
 
-    # Head cell is the starting point — force it free even if body overlaps.
+    # Head cell is the starting point - force it free even if body overlaps.
     free = ~body_grid.astype(bool).copy()
     t_flat = np.repeat(np.arange(T), B)
     b_flat = np.tile(np.arange(B), T)
@@ -177,7 +177,7 @@ def compute_reachability(
     visited = np.zeros((T, B, H, W), dtype=bool)
     visited[t_flat, b_flat, hr_flat, hc_flat] = True
 
-    for _ in range(H + W):  # max BFS depth on an H×W grid
+    for _ in range(H + W):  # max BFS depth on an HxW grid
         # 4-connected expansion; boundaries stay zero (no wrap).
         new_cells = np.zeros((T, B, H, W), dtype=bool)
         new_cells[:, :, :-1, :] |= visited[:, :, 1:, :]    # neighbour from below
@@ -193,7 +193,7 @@ def compute_reachability(
     return visited.sum(axis=(2, 3)).astype(np.int32)  # (T, B)
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# -- Main ----------------------------------------------------------------------
 
 def main():
     args = parse_args()
@@ -217,7 +217,7 @@ def main():
             name=f"eval_{run_name}",
         )
 
-    # ── Environment + agents ──
+    # -- Environment + agents --
     raw_env = jumanji.make(args.env_name)
     eval_env = VmapAutoResetWrapper(raw_env)
     agents = make_agents(eval_env, args.eval_num_envs, args.sim_options, gamma=args.gamma)
@@ -226,9 +226,9 @@ def main():
     _dummy_obs = raw_env.observation_spec.generate_value()
     H, W = _dummy_obs.grid.shape[0], _dummy_obs.grid.shape[1]
     board_total_cells = H * W
-    logger.info(f"SnakeKT grid: {H}×{W}")
+    logger.info(f"SnakeKT grid: {H}x{W}")
 
-    # ── Load checkpoints ──
+    # -- Load checkpoints --
     az_params_state = jax.device_put(load_az_checkpoint(args.az_checkpoint_path))
     gating_state = load_gating_checkpoint(args.gating_checkpoint_path)
     gating_params = gating_state.params
@@ -236,10 +236,10 @@ def main():
 
     B = args.eval_num_envs
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # JIT eval — summary (fast baseline + gating return collection)
+    # ===========================================================================
+    # JIT eval - summary (fast baseline + gating return collection)
     # Mirrors jit_eval from training exactly: lax.scan, no Python loop.
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     @functools.partial(jax.jit, static_argnames=("greedy", "random_policy", "force_k"))
     def jit_eval(g_params, init_states, init_obs, key, *, greedy, random_policy, force_k=-1):
         az_net_params = jax.lax.stop_gradient(az_params_state.params.net)
@@ -303,17 +303,17 @@ def main():
         (_, _, raw_ret, _, _, k_cnt), _ = jax.lax.scan(scan_body, init_carry, step_keys)
         return raw_ret, k_cnt
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Detailed eval — per-step Snake context tracking (greedy gating only)
+    # ===========================================================================
+    # Detailed eval - per-step Snake context tracking (greedy gating only)
     #
     # Tracks at each meta-step (all captured BEFORE the MCTS call):
-    #   snake_length  — current snake length (longer = harder to navigate)
-    #   board_fill    — snake_length / total_cells (board density)
-    #   valid_moves   — number of available actions (1–4); proxy for immediate constraint
-    #   fruit_dist    — Manhattan distance head→fruit; proxy for goal difficulty
-    #   head_row/col  — head position (needed for post-hoc density + reachability)
-    #   body_grid     — full body occupancy (B, H, W) for density + flood-fill
-    # ═══════════════════════════════════════════════════════════════════════════
+    #   snake_length  - current snake length (longer = harder to navigate)
+    #   board_fill    - snake_length / total_cells (board density)
+    #   valid_moves   - number of available actions (1-4); proxy for immediate constraint
+    #   fruit_dist    - Manhattan distance head->fruit; proxy for goal difficulty
+    #   head_row/col  - head position (needed for post-hoc density + reachability)
+    #   body_grid     - full body occupancy (B, H, W) for density + flood-fill
+    # ===========================================================================
     @jax.jit
     def detailed_eval(g_params, init_states, init_obs, key):
         az_net_params = jax.lax.stop_gradient(az_params_state.params.net)
@@ -321,7 +321,7 @@ def main():
 
         def scan_body(carry, step_key):
             states, obs, raw_ret, done, k_cnt = carry
-            active_mask = ~done  # (B,) — was episode alive at START of this step
+            active_mask = ~done  # (B,) - was episode alive at START of this step
 
             obs_grid, time_vec = agents[0]._get_grid_and_time(states, obs)
             invalid = agents[0]._get_invalid_actions(agents[0].raw_env_train, states, obs)
@@ -334,14 +334,14 @@ def main():
             logits, _ = gating_fwd.apply(g_params, obs_grid, time_vec, az_trk, az_val)
             k_choices = jnp.argmax(logits, axis=-1)  # greedy
 
-            # ── Snake context at decision time ────────────────────────────────
+            # -- Snake context at decision time --------------------------------
             snake_length = states.length.astype(jnp.int32)         # (B,)
             board_fill   = states.length.astype(jnp.float32) / board_total_cells  # (B,)
 
-            # Number of legal actions (1–4); 1 = cornered with only one exit.
+            # Number of legal actions (1-4); 1 = cornered with only one exit.
             valid_moves = obs.action_mask.sum(axis=-1).astype(jnp.int32)  # (B,)
 
-            # Manhattan distance from head to fruit — goal-reach difficulty.
+            # Manhattan distance from head to fruit - goal-reach difficulty.
             fruit_dist = (
                 jnp.abs(states.head_position.row - states.fruit_position.row)
                 + jnp.abs(states.head_position.col - states.fruit_position.col)
@@ -351,7 +351,7 @@ def main():
             head_row = states.head_position.row.astype(jnp.int32)  # (B,)
             head_col = states.head_position.col.astype(jnp.int32)  # (B,)
 
-            # Full body occupancy — used by compute_local_density / compute_reachability.
+            # Full body occupancy - used by compute_local_density / compute_reachability.
             body_grid_step = states.body  # (B, H, W) bool
 
             keys_m = jax.random.split(step_key, 4)
@@ -380,11 +380,11 @@ def main():
             new_done = done | sel_dn
 
             step_info = {
-                "k_choices":    k_choices,                       # (B,) int 0–3
+                "k_choices":    k_choices,                       # (B,) int 0-3
                 "sims_chosen":  (k_choices + 1) * 32,            # (B,) int 32/64/96/128
                 "snake_length": snake_length,                    # (B,) int
-                "board_fill":   board_fill,                      # (B,) float 0–1
-                "valid_moves":  valid_moves,                     # (B,) int 1–4
+                "board_fill":   board_fill,                      # (B,) float 0-1
+                "valid_moves":  valid_moves,                     # (B,) int 1-4
                 "fruit_dist":   fruit_dist,                      # (B,) int
                 "head_row":     head_row,                        # (B,) int
                 "head_col":     head_col,                        # (B,) int
@@ -405,7 +405,7 @@ def main():
         )
         return raw_ret, k_cnt, step_data
 
-    # ── Batch-run helpers ─────────────────────────────────────────────────────
+    # -- Batch-run helpers -----------------------------------------------------
 
     def run_jit_eval(n_episodes, force_k=-1, random_policy=False, greedy=True):
         all_returns, all_kcnt = [], []
@@ -443,9 +443,9 @@ def main():
         )
         return returns, step_data_all
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 1. MCTS Timing Benchmark
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     logger.info("=== MCTS Timing Benchmark ===")
 
     timing_env = VmapAutoResetWrapper(jumanji.make(args.env_name))
@@ -485,7 +485,7 @@ def main():
         fps    = K / mean_t
         timing_results[K] = {"sims": sims, "mean_ms": mean_t * 1000,
                               "std_ms": std_t * 1000, "fps": fps}
-        logger.info(f"  K={K} sims={sims}: {mean_t*1000:.1f} ± {std_t*1000:.1f} ms  →  {fps:.1f} frames/s")
+        logger.info(f"  K={K} sims={sims}: {mean_t*1000:.1f} ± {std_t*1000:.1f} ms  ->  {fps:.1f} frames/s")
 
     print("\n  K  sims  t_mean(ms)  t_std(ms)  eff_fps")
     print("  " + "-" * 44)
@@ -493,9 +493,9 @@ def main():
         print(f"  {K}   {tr['sims']:3d}    {tr['mean_ms']:7.1f}    {tr['std_ms']:6.1f}   {tr['fps']:7.1f}")
     print()
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 2. Fixed-K Baselines
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     logger.info("=== Baselines ===")
     baseline_results: Dict[str, dict] = {}
     for k_idx in range(4):
@@ -510,9 +510,9 @@ def main():
     baseline_results["random"] = {"mean": m, "se": se}
     logger.info(f"  random: {m:.3f} ± {se:.3f}")
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # 3. Gating Policy — Summary
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
+    # 3. Gating Policy - Summary
+    # ===========================================================================
     logger.info("=== Gating Policy (summary) ===")
     gating_returns, gating_kcnt = run_jit_eval(args.n_episodes, force_k=-1)
     gating_mean, gating_se = mean_se(gating_returns)
@@ -521,9 +521,9 @@ def main():
     logger.info(f"  return: {gating_mean:.3f} ± {gating_se:.3f}")
     logger.info(f"  K_pct:  {np.round(k_dist_pct, 1)}")
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # 4. Gating Policy — Detailed Per-Step Context
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
+    # 4. Gating Policy - Detailed Per-Step Context
+    # ===========================================================================
     logger.info("=== Gating Policy (detailed) ===")
     gating_det_returns, step_data = run_detailed(args.n_episodes)
     gating_det_mean, gating_det_se = mean_se(gating_det_returns)
@@ -535,7 +535,7 @@ def main():
     sims_chosen   = step_data["sims_chosen"]            # (T, N)
     snake_length  = step_data["snake_length"]           # (T, N) int
     board_fill    = step_data["board_fill"]             # (T, N) float
-    valid_moves   = step_data["valid_moves"]            # (T, N) int 1–4
+    valid_moves   = step_data["valid_moves"]            # (T, N) int 1-4
     fruit_dist    = step_data["fruit_dist"]             # (T, N) int
     head_row      = step_data["head_row"]               # (T, N) int
     head_col      = step_data["head_col"]               # (T, N) int
@@ -549,7 +549,7 @@ def main():
     ])
     logger.info(f"  global K_pct (detailed): {np.round(global_k_pct, 1)}")
 
-    # ── Per-step statistics ───────────────────────────────────────────────────
+    # -- Per-step statistics ---------------------------------------------------
     act_count = active.sum(axis=1)          # (T,)
     valid_t   = act_count > 1              # (T,)
 
@@ -570,7 +570,7 @@ def main():
         k_count = (active & (k_choices == k)).sum(axis=1).astype(float)
         step_k_frac[:, k] = np.where(valid_t, k_count / np.maximum(act_count, 1), np.nan)
 
-    # ── Context statistics conditioned on K ──────────────────────────────────
+    # -- Context statistics conditioned on K ----------------------------------
     flat_active = active.flatten()
     flat_k      = k_choices.flatten()
     flat_length = snake_length.flatten().astype(float)
@@ -579,7 +579,7 @@ def main():
     flat_fdist  = fruit_dist.flatten().astype(float)
 
     def _by_k(flat_vals):
-        """Mean ± SE of flat_vals for each K choice, over active steps."""
+        """Mean +/- SE of flat_vals for each K choice, over active steps."""
         out = {}
         for k in range(4):
             mask = flat_active & (flat_k == k)
@@ -613,10 +613,10 @@ def main():
         m, se = fruit_dist_by_k[k]
         logger.info(f"  K={k+1}: {m:.3f} ± {se:.3f}")
 
-    # ── Post-eating K distribution ───────────────────────────────────────────
+    # -- Post-eating K distribution -------------------------------------------
     # Collect the K chosen on the meta-step immediately after a fruit was eaten
-    # (reward > 0 on step t  →  record k_choices[t+1] if still active).
-    ate_mask = (reward > 0.5) & active   # (T, N) bool — fruit-eating events
+    # (reward > 0 on step t  ->  record k_choices[t+1] if still active).
+    ate_mask = (reward > 0.5) & active   # (T, N) bool - fruit-eating events
     post_eat_ks = []
     for t in range(T - 1):
         follow_active = active[t + 1]
@@ -633,13 +633,13 @@ def main():
     logger.info(f"Post-eating K distribution ({len(post_eat_ks)} events): "
                 f"{np.round(post_eat_k_pct, 1)}")
 
-    # ── Local body density and flood-fill reachability (post-hoc numpy) ──────
+    # -- Local body density and flood-fill reachability (post-hoc numpy) ------
     # These are computed from the body_grid + head position saved per step.
-    logger.info("Computing local body density (3×3 neighbourhood)…")
+    logger.info("Computing local body density (3x3 neighbourhood)...")
     local_density = compute_local_density(body_grid, head_row, head_col, radius=1)
     # (T, N) float32
 
-    logger.info("Computing flood-fill reachability (BFS from head)…")
+    logger.info("Computing flood-fill reachability (BFS from head)...")
     reachability = compute_reachability(body_grid, head_row, head_col)
     # (T, N) int32
 
@@ -657,9 +657,9 @@ def main():
         m, se = reachability_by_k[k]
         logger.info(f"  K={k+1}: {m:.2f} ± {se:.2f}")
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 5. Plots
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     COLORS   = ["#4C72B0", "#DD8452", "#55A868", "#C44E52", "#8172B2", "#777777"]
     K_LABELS = ["K=1 (32)", "K=2 (64)", "K=3 (96)", "K=4 (128)"]
     k_short  = ["K=1", "K=2", "K=3", "K=4"]
@@ -708,7 +708,7 @@ def main():
     plt.savefig(os.path.join(args.output_dir, "per_step_sims.png"), dpi=150)
     plt.close()
 
-    # Plot 3: Stacked area — K fraction per step
+    # Plot 3: Stacked area - K fraction per step
     fig, ax = plt.subplots(figsize=(11, 4))
     bottoms = np.zeros(len(valid_idx))
     for k in range(4):
@@ -784,7 +784,7 @@ def main():
     axes[0].bar(k_short, vm_means, color=COLORS[:4], alpha=0.85)
     axes[0].errorbar(range(4), vm_means, yerr=vm_ses,
                      fmt="none", color="black", capsize=5, linewidth=1.5)
-    axes[0].set_ylabel("Mean valid moves (1–4)")
+    axes[0].set_ylabel("Mean valid moves (1-4)")
     axes[0].set_title("Valid Moves when Each K is Chosen")
     axes[0].set_ylim(0, 4.5)
     axes[0].axhline(y=4, color="gray", linestyle="--", linewidth=0.8, label="Max (4)")
@@ -795,7 +795,7 @@ def main():
     axes[1].bar(k_short, fd_means, color=COLORS[:4], alpha=0.85)
     axes[1].errorbar(range(4), fd_means, yerr=fd_ses,
                      fmt="none", color="black", capsize=5, linewidth=1.5)
-    axes[1].set_ylabel("Mean Manhattan distance (head → fruit)")
+    axes[1].set_ylabel("Mean Manhattan distance (head -> fruit)")
     axes[1].set_title("Fruit Distance when Each K is Chosen")
     axes[1].set_ylim(0, H + W)
 
@@ -831,7 +831,7 @@ def main():
     axes[0].bar(k_short, ld_means, color=COLORS[:4], alpha=0.85)
     axes[0].errorbar(range(4), ld_means, yerr=ld_ses,
                      fmt="none", color="black", capsize=5, linewidth=1.5)
-    axes[0].set_ylabel("Mean body density in 3×3 neighbourhood")
+    axes[0].set_ylabel("Mean body density in 3x3 neighbourhood")
     axes[0].set_title("Local Body Density when Each K is Chosen")
     axes[0].set_ylim(0, 1)
 
@@ -851,9 +851,9 @@ def main():
 
     logger.info(f"All plots saved to {args.output_dir}/")
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 6. Summary JSON
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     def _fmt_by_k(by_k_dict, suffix_mean="mean", suffix_se="se"):
         return {
             f"k{k+1}": {
@@ -898,9 +898,9 @@ def main():
         json.dump(summary, f, indent=2)
     logger.info(f"Results saved to {json_path}")
 
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     # 7. W&B Logging
-    # ═══════════════════════════════════════════════════════════════════════════
+    # ===========================================================================
     if not args.no_wandb:
         log_dict = {
             "gating/mean_return":    gating_mean,

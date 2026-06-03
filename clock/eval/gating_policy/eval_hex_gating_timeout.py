@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Drop-in eval script for gating policy evaluation (STRICT-TIMEOUT variant).
+Gating policy evaluation (strict-timeout variant).
 Supports:
   - --env speed_gardner_chess  OR  --env speed_hex_timeout (and future speed_* envs)
   - --opponents 0 (policy-only opponent, no MCTS ever)
@@ -52,13 +52,13 @@ from network_intermediate import AZNet  # must be compatible with pretrained che
 
 ITER_FILE_DEFAULT = os.getenv(
     "ITER_FILE",
-    "000600.ckpt"
+    "base_planner.ckpt"
 )
 
 # You will typically override these on the CLI anyway.
 CKPT_ROOT_DEFAULT = os.getenv(
     "CKPT_ROOT",
-    "/scratch/fbd2014/speedchess/examples/alphazero/new_base_nonspeed_nsim_checkpoints",
+    "./checkpoints/clock/hex/base",
 )
 GATE_ROOT_DEFAULT = os.getenv(
     "GATE_ROOT",
@@ -245,6 +245,43 @@ def discover_checkpoints(root: str, iter_filename: str, pretrained_seed: int = 1
     return ckpts
 
 
+def _resolve_flat_az_ckpt(root: str, iter_filename: str) -> Optional[str]:
+    """Find an AZ checkpoint sitting directly in ``root``
+    (e.g. ``checkpoints/clock/hex/base/base_planner.ckpt``) rather than under the
+    ``nsim_*/<seed>/`` training layout that ``discover_checkpoints`` expects."""
+    if not os.path.isdir(root):
+        return None
+    direct = os.path.join(root, iter_filename)
+    if os.path.exists(direct):
+        return direct
+    cands = sorted(f for f in os.listdir(root) if f.endswith(".ckpt"))
+    if cands:
+        return os.path.join(root, cands[-1])
+    return None
+
+
+def _resolve_flat_gate_ckpt(gate_root: str, gate_iter: Optional[int] = None) -> Optional[str]:
+    """Find a gate ``.pkl`` sitting directly in
+    ``gate_root`` rather than under the
+    ``{env}/pre_{nsim}/opts..._seed{seed}/`` training layout."""
+    if not os.path.isdir(gate_root):
+        return None
+    pkls = [f for f in os.listdir(gate_root) if f.endswith(".pkl")]
+    if not pkls:
+        return None
+
+    def _iter_of(fn: str) -> int:
+        m = re.search(r"(\d+)\.pkl$", fn)
+        return int(m.group(1)) if m else -1
+
+    if gate_iter is not None:
+        for fn in pkls:
+            if _iter_of(fn) == gate_iter:
+                return os.path.join(gate_root, fn)
+    pkls.sort(key=_iter_of)
+    return os.path.join(gate_root, pkls[-1])
+
+
 # ================================================================
 # AZ forward + MCTS
 # ================================================================
@@ -395,7 +432,7 @@ def make_select_actions_mcts(forward, recurrent_fn, num_simulations: int):
 #
 # Maintains a recurrent hidden state across steps within each episode.
 # Single-step forward: (obs, time_feat, az_value, az_intermediate, hidden)
-#   → (logits, value, new_hidden)
+#   -> (logits, value, new_hidden)
 # ================================================================
 
 class GateNet(hk.Module):
@@ -416,7 +453,7 @@ class GateNet(hk.Module):
         self.gru_hidden_size = gru_hidden_size
 
     def _conv_pool(self, x, name_prefix):
-        """Conv trunk → global avg pool + global max pool → (B, 128)."""
+        """Conv trunk -> global avg pool + global max pool -> (B, 128)."""
         x = hk.Conv2D(64, kernel_shape=3, padding="SAME", name=f"{name_prefix}_conv1")(x)
         x = jax.nn.relu(x)
         x = hk.Conv2D(64, kernel_shape=3, padding="SAME", name=f"{name_prefix}_conv2")(x)
@@ -473,7 +510,7 @@ class GateNet(hk.Module):
 
 def make_gate_forward(num_options: int, gru_hidden_size: int = 128):
     def gate_forward_fn(obs_batch, time_feat_batch, az_value_batch, az_inter_batch, hidden):
-        net = GateNet(num_options=num_options, gru_hidden_size=gru_hidden_size)  # +1 for policy-only fallback action (matches training)
+        net = GateNet(num_options=num_options, gru_hidden_size=gru_hidden_size)  # one logit per sim option
         return net(obs_batch, time_feat_batch, az_value_batch, az_inter_batch, hidden)
     return hk.without_apply_rng(hk.transform(gate_forward_fn))
 
@@ -615,7 +652,6 @@ def _parse_int_list(s: str) -> List[int]:
 #       policy-only action, time_spent=0
 #   - Opponent_kind == policy_only still forces P1 policy-only always.
 #
-# NEW:
 #   - p1_timeout_avoided: True on a P1 move iff it hit the "cannot afford" fallback
 #     (meaning it WOULD have lost if we enforced timeouts while still attempting that nsim).
 # ================================================================
@@ -668,7 +704,7 @@ def make_play_many_jitted_multiclass(
         masked = jnp.where(legal_mask_1d, logits_1d, jnp.finfo(logits_1d.dtype).min)
         return jnp.argmax(masked).astype(jnp.int32)
 
-    # NEW: constant (used inside jit) to distinguish "always policy-only opponent"
+    # constant (used inside jit) to distinguish "always policy-only opponent"
     P1_FORCED_POLICY_ONLY = jnp.bool_(opponent_kind == "policy_only")
     USE_GATE = jnp.bool_(use_gate)
     P0_RANDOM_CHOICE = jnp.bool_(play_random_choice)
@@ -976,9 +1012,9 @@ def summarize_trajs_multiclass(
     raw_wins_p0 = 0
     raw_wins_p1 = 0
     raw_draws = 0
-    raw_p1_to_l = 0   # P1 timeout-avoided losses (→ benefit P0 in fair clock)
+    raw_p1_to_l = 0   # P1 timeout-avoided losses (-> benefit P0 in fair clock)
     raw_p1_to_d = 0
-    raw_p0_to_w = 0   # P0 timeout-avoided wins (→ penalise P0 in fair clock)
+    raw_p0_to_w = 0   # P0 timeout-avoided wins (-> penalise P0 in fair clock)
     raw_p0_to_d = 0
 
     # Gate usage stats (P0 only), counts over sim_options (ignore nsim==0)
@@ -998,7 +1034,7 @@ def summarize_trajs_multiclass(
     p1_no_policy_only_d = 0
     p1_policy_only_first_steps: List[int] = []
 
-    # NEW: within policy-only games, when P1 wins (== P0 loss), why?
+    # within policy-only games, when P1 wins (== P0 loss), why?
     p1_policy_only_p1wins_total = 0
     p1_policy_only_p1wins_p0_timeout = 0
     p1_policy_only_p1wins_p0_checkmate_else = 0
@@ -1010,7 +1046,7 @@ def summarize_trajs_multiclass(
     p1_policy_only_moves_loss = 0
     p1_policy_only_moves_draw = 0
 
-    # NEW: timeout-avoided (would-timeout-if-enforced) game-level + move-level
+    # timeout-avoided (would-timeout-if-enforced) game-level + move-level
     p1_timeout_avoided_games = 0
     p1_timeout_avoided_w = 0
     p1_timeout_avoided_l = 0
@@ -1019,7 +1055,7 @@ def summarize_trajs_multiclass(
     p1_timeout_avoided_moves_total = 0
     p1_timeout_avoided_games_anymove = 0
     
-    # NEW: P0 policy-only + timeout-avoided (game-level + move-level)
+    # P0 policy-only + timeout-avoided (game-level + move-level)
     p0_policy_only_games = 0
     p0_policy_only_w = 0
     p0_policy_only_l = 0
@@ -1047,7 +1083,7 @@ def summarize_trajs_multiclass(
 
     # Unique-game deduplication: track first-seen signature to skip duplicate move sequences
     sig_seen: set = set()
-    # Also map sig → game_idx for the first occurrence (used by visualization)
+    # Also map sig -> game_idx for the first occurrence (used by visualization)
     sig_to_first_game: Dict[str, int] = {}
 
     # Strategy: per-player-turn average nsim accumulators (unique games only)
@@ -1105,12 +1141,12 @@ def summarize_trajs_multiclass(
             p1_to_moves_raw = p1_to_all[g][move_indices].astype(bool)
             p0_to_moves_raw = p0_to_all[g][move_indices].astype(bool)
             if p1_to_moves_raw.any():
-                if r1_raw > 0:   # P1 won a game where P1 avoided timeout → count
+                if r1_raw > 0:   # P1 won a game where P1 avoided timeout -> count
                     raw_p1_to_l += 1
                 elif r0_raw == 0 and r1_raw == 0:
                     raw_p1_to_d += 1
             if p0_to_moves_raw.any():
-                if r0_raw > 0:   # P0 won a game where P0 avoided timeout → penalise
+                if r0_raw > 0:   # P0 won a game where P0 avoided timeout -> penalise
                     raw_p0_to_w += 1
                 elif r0_raw == 0 and r1_raw == 0:
                     raw_p0_to_d += 1
@@ -1174,7 +1210,7 @@ def summarize_trajs_multiclass(
             else:
                 p1_policy_only_d += 1
 
-            # NEW: if P1 wins within policy-only games, why did P0 lose?
+            # if P1 wins within policy-only games, why did P0 lose?
             if outcome == "loss":
                 p1_policy_only_p1wins_total += 1
                 if p0_time_left <= 0.0:
@@ -1212,7 +1248,7 @@ def summarize_trajs_multiclass(
             else:
                 p1_policy_only_moves_draw += c_pol
 
-        # NEW: timeout-avoided (would timeout if enforced) ever? (P1 only)
+        # timeout-avoided (would timeout if enforced) ever? (P1 only)
         if len(move_indices) > 0:
             p1_moves_mask = (players_g[move_indices] == 1)
             p1_to_moves = p1to_g[move_indices][p1_moves_mask]
@@ -1222,7 +1258,7 @@ def summarize_trajs_multiclass(
             to_ever = False
             c_to = 0
         # ----------------------------
-        # NEW: P0 policy-only ever? + move totals
+        # P0 policy-only ever? + move totals
         # ----------------------------
         if len(move_indices) > 0:
             p0_moves_mask = (players_g[move_indices] == 0)
@@ -1299,7 +1335,7 @@ def summarize_trajs_multiclass(
             if steps.size > 0:
                 p1_timeout_avoided_first_steps.append(int(steps.min()))
 
-            # NEW: if P1 wins in timeout-avoided games, why did P0 lose?
+            # if P1 wins in timeout-avoided games, why did P0 lose?
             if outcome == "loss":
                 p1_timeout_avoided_p1wins_total += 1
                 if p0_time_left <= 0.0:
@@ -1466,7 +1502,7 @@ def summarize_trajs_multiclass(
         "p1_policy_only_expected_score": float(p1_policy_only_expected_score),
         "p1_policy_only_first_step_mean": p1_pol_first_mean,
 
-        # NEW: in policy-only games, P1 wins -> why did P0 lose?
+        # in policy-only games, P1 wins -> why did P0 lose?
         "p1_policy_only_p1wins_total": int(p1_policy_only_p1wins_total),
         "p1_policy_only_p1wins_p0_timeout": int(p1_policy_only_p1wins_p0_timeout),
         "p1_policy_only_p1wins_p0_checkmate_else": int(p1_policy_only_p1wins_p0_checkmate_else),
@@ -1483,7 +1519,7 @@ def summarize_trajs_multiclass(
         "p1_policy_only_moves_loss": int(p1_policy_only_moves_loss),
         "p1_policy_only_moves_draw": int(p1_policy_only_moves_draw),
 
-        # NEW: timeout-avoided subset (games where P1 would have lost if timeouts enforced)
+        # timeout-avoided subset (games where P1 would have lost if timeouts enforced)
         "p1_timeout_avoided_games": int(p1_timeout_avoided_games),
         "p1_timeout_avoided_w": int(p1_timeout_avoided_w),
         "p1_timeout_avoided_l": int(p1_timeout_avoided_l),
@@ -1493,7 +1529,7 @@ def summarize_trajs_multiclass(
         "p1_timeout_avoided_moves_total": int(p1_timeout_avoided_moves_total),
         "p1_timeout_avoided_games_anymove": int(p1_timeout_avoided_games_anymove),
 
-        # NEW: within timeout-avoided games, when P1 wins (== P0 loss), why?
+        # within timeout-avoided games, when P1 wins (== P0 loss), why?
         "p1_timeout_avoided_p1wins_total": int(p1_timeout_avoided_p1wins_total),
         "p1_timeout_avoided_p1wins_p0_timeout": int(p1_timeout_avoided_p1wins_p0_timeout),
         "p1_timeout_avoided_p1wins_p0_checkmate_else": int(p1_timeout_avoided_p1wins_p0_checkmate_else),
@@ -1508,7 +1544,7 @@ def summarize_trajs_multiclass(
         "p0_policy_only_moves_total": int(p0_policy_only_moves_total),
         "p0_policy_only_games_anymove": int(p0_policy_only_games_anymove),
 
-        # NEW: P0 timeout-avoided subset (P0 would have lost if strict timeouts enforced)
+        # P0 timeout-avoided subset (P0 would have lost if strict timeouts enforced)
         "p0_timeout_avoided_games": int(p0_timeout_avoided_games),
         "p0_timeout_avoided_w": int(p0_timeout_avoided_w),
         "p0_timeout_avoided_d": int(p0_timeout_avoided_d),
@@ -1738,10 +1774,16 @@ def run_eval_once_multiclass(
 
     ckpt_paths = discover_checkpoints(ckpt_root, iter_file, pretrained_seed=pretrained_seed)
     key = f"nsim_{pretrained_nsim}"
-    if key not in ckpt_paths:
-        raise RuntimeError(f"Missing pretrained AZ checkpoint {key} under {ckpt_root}")
+    if key in ckpt_paths:
+        az_ckpt_path = ckpt_paths[key]
+    else:
+        # fall back to a checkpoint sitting directly in ckpt_root
+        az_ckpt_path = _resolve_flat_az_ckpt(ckpt_root, iter_file)
+        if az_ckpt_path is None:
+            raise RuntimeError(f"Missing pretrained AZ checkpoint {key} under {ckpt_root}")
+        print(f"Using AZ checkpoint: {az_ckpt_path}")
 
-    env_id, cfg, model_pretrained = load_checkpoint(ckpt_paths[key])
+    env_id, cfg, model_pretrained = load_checkpoint(az_ckpt_path)
     expected_env_id = env_bundle.base_env_id
     if env_id != expected_env_id:
         raise RuntimeError(f"AZ env_id mismatch: got {env_id}, expected {expected_env_id}")
@@ -1988,14 +2030,14 @@ def _make_hex_frame_annotated(dwg, state, config, annotations: dict):
 
     board_g = _make_hex_dwg(dwg, state, config)
 
-    # All arithmetic uses plain Python floats — no JAX scalars.
+    # All arithmetic uses plain Python floats - no JAX scalars.
     GS     = float(config["GRID_SIZE"]) / 2.0          # effective half-size (same as _make_hex_dwg)
     r3     = _math.sqrt(3)
     size   = int(_math.sqrt(int(state._x.board.shape[-1])))
     fsize  = float(max(10, int(GS * 0.9)))
 
     # _make_hex_dwg translates the whole group by (3*GS, 2*GS).
-    # Board cells span y ∈ [2*GS .. (size-1)*GS*1.5 + 2*GS].
+    # Board cells span y in [2*GS .. (size-1)*GS*1.5 + 2*GS].
     board_h = float((size - 1) * GS * 1.5 + 2.0 * GS)
     text_y1 = board_h + fsize * 1.5                    # first annotation line
     text_y2 = text_y1 + fsize * 1.4                    # second annotation line
@@ -2432,6 +2474,11 @@ def main():
                         prefer_best=args.prefer_best,
                         gate_iter=args.gate_iter,
                     )
+                    if gate_ckpt is None:
+                        # fall back to a gate .pkl sitting directly in gate_root
+                        gate_ckpt = _resolve_flat_gate_ckpt(args.gate_root, args.gate_iter)
+                        if gate_ckpt is not None:
+                            print(f"Using gate checkpoint: {gate_ckpt}")
                     if gate_ckpt is None:
                         print(f"\nWARNING: No gate ckpt found for T={T}, seed={seed}. Skipping.")
                         if run is not None:

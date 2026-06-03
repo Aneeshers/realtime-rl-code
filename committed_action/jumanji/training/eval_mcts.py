@@ -39,9 +39,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# ──────────────────────────────────────────────────────────
+# ----------------------------------------------------------
 # Evaluation logic (single-episode, vmapped, no pmap)
-# ──────────────────────────────────────────────────────────
+# ----------------------------------------------------------
 
 
 def eval_one_episode(
@@ -145,9 +145,9 @@ def run_batch_eval(
     return jax.tree_util.tree_map(lambda x: float(jnp.mean(x)), metrics), time_per_episode
 
 
-# ──────────────────────────────────────────────────────────
+# ----------------------------------------------------------
 # Main
-# ──────────────────────────────────────────────────────────
+# ----------------------------------------------------------
 
 
 def main():
@@ -183,8 +183,8 @@ def main():
 
     args = parser.parse_args()
 
-    # ── Load checkpoint ──────────────────────────────────
-    logger.info(f"Loading checkpoint from {args.checkpoint} …")
+    # -- Load checkpoint ----------------------------------
+    logger.info(f"Loading checkpoint from {args.checkpoint} ...")
     with open(args.checkpoint, "rb") as f:
         training_state: TrainingState = pickle.load(f)
 
@@ -198,7 +198,7 @@ def main():
     checkpoint_name = args.checkpoint.rsplit("/", 1)[-1].replace(".pkl", "")
     logger.info(f"Checkpoint loaded: {checkpoint_name}")
 
-    # ── Build env & agent ────────────────────────────────
+    # -- Build env & agent --------------------------------
     env = jumanji.make("Sokoban-v0")
 
     # We need a "dummy" agent just to get make_policy working.
@@ -219,7 +219,7 @@ def main():
         time_embed_dim=args.time_embed_dim,
     )
 
-    # ── Evaluate at each sim budget ──────────────────────
+    # -- Evaluate at each sim budget ----------------------
     key = jax.random.PRNGKey(args.seed)
 
     # Collect results across all sims for the summary run
@@ -278,7 +278,7 @@ def main():
         # Save for summary
         all_results.append(log_data)
 
-    # ── Summary W&B run: performance vs compute tradeoff ─
+    # -- Summary W&B run: performance vs compute tradeoff -
     logger.info(f"\n{'='*60}")
     logger.info("Creating summary tradeoff run...")
     logger.info(f"{'='*60}")

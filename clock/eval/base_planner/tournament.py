@@ -474,7 +474,7 @@ def main():
     )
 
     # -----------------------------------------------------------------
-    # NEW: Batched + JIT diversity sampler that RECORDS ACTIONS
+    # batched + jit diversity sampler that records actions
     # -----------------------------------------------------------------
     def run_match_with_actions(
         rng_key: jnp.ndarray,

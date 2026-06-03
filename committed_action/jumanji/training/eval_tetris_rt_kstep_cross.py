@@ -2,8 +2,8 @@
 Cross-model evaluation for TetrisRTKStep Gumbel-AlphaZero.
 
 For a model trained with K_model action delay, evaluate it at every combination of:
-  - K_eval  ∈ args.k_eval_list   (test-time action delay)
-  - num_sims ∈ args.sims_list    (MCTS simulation budget)
+  - K_eval  in args.k_eval_list   (test-time action delay)
+  - num_sims in args.sims_list    (MCTS simulation budget)
 
 Unlike plain TetrisRT, TetrisRTKStep triggers the K-step path in _k_step
 (because _is_tetris_rt_kstep=True), so patching agent.pacman_action_delay=k_eval
@@ -12,7 +12,7 @@ affects BOTH:
      (K_eval-1 noops with action=5, then the real action)
   2. The outer eval loop: K_eval real env steps per agent decision
 
-This means training and test dynamics are fully consistent — the same K the
+This means training and test dynamics are fully consistent - the same K the
 agent was trained with governs how it plans and how it acts.
 
 Reward metric: RAW (undiscounted) episode return.
@@ -53,12 +53,12 @@ from jumanji.wrappers import VmapAutoResetWrapper
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-_TETRIS_RT_NOOP = 5  # no horizontal/rotation change, gravity only — see tetris_rt/env.py
+_TETRIS_RT_NOOP = 5  # no horizontal/rotation change, gravity only - see tetris_rt/env.py
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Robust checkpoint loading
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 
 
 def load_checkpoint(checkpoint_path: str) -> TrainingState:
@@ -101,9 +101,9 @@ def load_checkpoint(checkpoint_path: str) -> TrainingState:
     return training_state
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Core eval: single episode with K-step execution and raw reward accumulation
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 
 
 def eval_one_episode_kstep(
@@ -131,7 +131,7 @@ def eval_one_episode_kstep(
         eval_env:    Raw (unwrapped) TetrisRTKStep environment.
         params_state: Checkpoint parameters (single-device, pmap axis stripped).
         key:         JAX PRNGKey.
-        k_eval:      Python int — number of env steps per agent decision.
+        k_eval:      Python int - number of env steps per agent decision.
 
     Returns:
         Dict with "episode_return" (raw) and "episode_length" (in env steps).
@@ -157,7 +157,7 @@ def eval_one_episode_kstep(
             action_key,
         )
 
-        # 2. Build the K_eval-length action sequence: [noop, …, noop, action]
+        # 2. Build the K_eval-length action sequence: [noop, ..., noop, action]
         noops = jnp.full((k_eval - 1,), _TETRIS_RT_NOOP, dtype=jnp.int32)
         real_action = jnp.reshape(action, (1,)).astype(jnp.int32)
         all_actions = jnp.concatenate([noops, real_action], axis=0)  # (k_eval,)
@@ -221,9 +221,9 @@ def eval_one_episode_kstep(
     return eval_metrics
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Batch evaluation
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 
 
 def run_batch_eval(
@@ -258,15 +258,15 @@ def run_batch_eval(
     return mean_metrics, time_per_episode
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Main
-# ──────────────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="Cross-model TetrisRTKStep evaluation: load K_model checkpoint, "
-                    "evaluate over K_eval × num_sims grid. "
+                    "evaluate over K_eval x num_sims grid. "
                     "MCTS tree expansion uses K_eval-step dynamics (via _k_step)."
     )
     parser.add_argument(
@@ -309,7 +309,7 @@ def main():
     parser.add_argument("--wandb_project", type=str, default="tetris_rt_kstep_cross_eval")
     parser.add_argument("--wandb_entity", type=str, default=None)
 
-    # Network architecture — must match training config
+    # Network architecture - must match training config
     parser.add_argument("--num_channels", type=int, default=128)
     parser.add_argument("--num_blocks", type=int, default=6)
     parser.add_argument("--time_embed_dim", type=int, default=32)
@@ -330,7 +330,7 @@ def main():
         training_state.params_state,
     )
 
-    # ── Build environment and agent ──────────────────────────────────────────
+    # -- Build environment and agent ------------------------------------------
     env = jumanji.make("TetrisRTKStep-v0")
     wrapped_env = VmapAutoResetWrapper(env)
 
@@ -412,7 +412,7 @@ def main():
             wandb.finish()
             all_results.append(log_data)
 
-    # ── Summary run ──────────────────────────────────────────────────────────
+    # -- Summary run ----------------------------------------------------------
     logger.info(f"\n{'='*60}\nCreating summary run for k_model={args.k_model}\n{'='*60}")
 
     wandb.init(
