@@ -1,11 +1,39 @@
-# Learning Planning Budgets for Real-Time RL: Code Release
+<h1 align="center">Finding the Time to Think in Real-Time RL</h1>
 
-Anonymous NeurIPS 2026 supplementary code for the paper
-**"Learning Planning Budgets for Real-Time RL."**
+<p align="center">
+  <a href="https://aneeshers.github.io">Aneesh Muppidi</a><sup>*</sup> &nbsp;&middot;&nbsp;
+  <a href="https://firasdarwish.com">Firas Darwish</a><sup>*</sup> &nbsp;&middot;&nbsp;
+  <a href="https://dylancope.com">Dylan Cope</a> &nbsp;&middot;&nbsp;
+  <a href="https://joao.science">Joao F. Henriques</a> &nbsp;&middot;&nbsp;
+  <a href="https://www.jakobfoerster.com">Jakob Nicolaus Foerster</a>
+</p>
+<p align="center"><sub><sup>*</sup> equal contribution &nbsp;·&nbsp; University of Oxford</sub></p>
 
-The paper trains a lightweight **gating policy** on top of a frozen
-AlphaZero-style planner that selects state-dependent MCTS planning budgets
-at each decision point. Five environments split across two regimes:
+<p align="center">
+  <a href="https://aneeshers.github.io/realtime-rl/">
+    <img src="https://img.shields.io/badge/Project-Website-2c6fad?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Project Website"></a>
+  &nbsp;
+  <a href="https://aneeshers.github.io/realtime-rl/assets/finding-the-time-to-think.pdf">
+    <img src="https://img.shields.io/badge/Paper-PDF-b31b1b?style=for-the-badge&logo=adobeacrobatreader&logoColor=white" alt="Paper PDF"></a>
+</p>
+
+<p align="center">
+  <a href="https://aneeshers.github.io/realtime-rl/">
+    <img src="https://aneeshers.github.io/realtime-rl/assets/figures/pacman_gate.gif" width="62%" alt="Adaptive gating in real-time Pac-Man"></a>
+</p>
+
+> **TL;DR** &mdash; In real-time RL the environment keeps moving while the agent
+> plans, so *thinking longer changes the state you act in*. We train a
+> lightweight **gating policy** on top of a **frozen** AlphaZero-style planner
+> that picks a state-dependent MCTS budget at each decision &mdash; thinking
+> deeply when it can afford to, reacting instantly when it must. It beats every
+> fixed-budget and heuristic baseline across five games and transfers to a
+> two-GPU real-time deployment with no retraining.
+
+This is the official code release. The paper trains a lightweight
+**gating policy** on top of a frozen AlphaZero-style planner that selects
+state-dependent MCTS planning budgets at each decision point. Five
+environments split across two regimes:
 
 | Regime | Environments | Source |
 |--|--|--|
@@ -230,7 +258,16 @@ Each launcher exposes hyperparameters via env vars (`SEED`, `NUM_EPOCHS`,
 
 ## Citation
 
-Withheld for the anonymous review period.
+```bibtex
+@misc{muppidi2026findingtime,
+  title        = {Finding the Time to Think in Real-Time RL},
+  author       = {Muppidi, Aneesh and Darwish, Firas and Cope, Dylan and
+                  Henriques, Jo\~ao F. and Foerster, Jakob Nicolaus},
+  year         = {2026},
+  note         = {Preprint},
+  howpublished = {\url{https://aneeshers.github.io/realtime-rl/}}
+}
+```
 
 ## Licenses
 
