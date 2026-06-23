@@ -15,6 +15,9 @@
   &nbsp;
   <a href="https://aneeshers.github.io/realtime-rl/assets/finding-the-time-to-think.pdf">
     <img src="https://img.shields.io/badge/Paper-PDF-b31b1b?style=for-the-badge&logo=adobeacrobatreader&logoColor=white" alt="Paper PDF"></a>
+  &nbsp;
+  <a href="https://huggingface.co/Aneesh19/realtime-rl-checkpoints">
+    <img src="https://img.shields.io/badge/Checkpoints-Hugging%20Face-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black" alt="Hugging Face Checkpoints"></a>
 </p>
 
 <p align="center">
