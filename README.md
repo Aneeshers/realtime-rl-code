@@ -13,8 +13,8 @@
   <a href="https://aneeshers.github.io/realtime-rl/">
     <img src="https://img.shields.io/badge/Project-Website-2c6fad?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Project Website"></a>
   &nbsp;
-  <a href="https://aneeshers.github.io/realtime-rl/assets/finding-the-time-to-think.pdf">
-    <img src="https://img.shields.io/badge/Paper-PDF-b31b1b?style=for-the-badge&logo=adobeacrobatreader&logoColor=white" alt="Paper PDF"></a>
+  <a href="https://arxiv.org/abs/2606.26463">
+    <img src="https://img.shields.io/badge/arXiv-2606.26463-b31b1b?style=for-the-badge&logo=arxiv&logoColor=white" alt="arXiv"></a>
   &nbsp;
   <a href="https://huggingface.co/Aneesh19/realtime-rl-checkpoints">
     <img src="https://img.shields.io/badge/Checkpoints-Hugging%20Face-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black" alt="Hugging Face Checkpoints"></a>
