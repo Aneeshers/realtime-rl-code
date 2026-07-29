@@ -1,0 +1,135 @@
+============================================================
+Repository setup
+============================================================
+REPO_ROOT=/data/engs-a2i/worc6991/realtime-rl-code
+PWD=/data/engs-a2i/worc6991/realtime-rl-code
+
+============================================================
+Python environment
+============================================================
+ENV_PY=/data/engs-a2i/worc6991/conda/envs/realtime_rl/bin/python
+Python executable: /data/engs-a2i/worc6991/conda/envs/realtime_rl/bin/python
+JAX version: 0.6.2
+
+============================================================
+Slurm job information
+============================================================
+Hostname: htc-g065
+SLURM_JOB_ID=8367078
+SLURM_NODELIST=htc-g065
+CUDA_VISIBLE_DEVICES=0
+
+Tue Jul 28 15:47:38 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.65.06              Driver Version: 580.65.06      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L40S                    On  |   00000000:CA:00.0 Off |                    0 |
+| N/A   25C    P8             34W /  350W |       0MiB /  46068MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+
+============================================================
+JAX device check
+============================================================
+JAX devices: [CudaDevice(id=0)]
+JAX default backend: gpu
+
+============================================================
+Entropy-threshold fitting configuration
+============================================================
+AZ_CHECKPOINT=/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/base/training_state_best.pkl
+OUTPUT_DIR=/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/entropy_threshold
+
+SEARCH_NUM_EPISODES=32
+VALIDATION_NUM_EPISODES=64
+TOP_K_CANDIDATES=8
+EVAL_META_STEPS=1200
+
+SIM_OPTIONS=32 64 96 128
+SEARCH_SEED_BASE=0
+VALIDATION_SEED_BASE=10000
+MCTS_SEED_OFFSET=1000000
+
+Threshold grid:
+  0.2 0.4 0.6 0.8
+Number of threshold triples:
+  C(4, 3) = 4
+============================================================
+
+============================================================
+Starting Pac-Man entropy-threshold fitting
+Start time: Tue Jul 28 03:48:47 PM BST 2026
+============================================================
+
+
+============================================================
+Threshold fitting command finished
+End time: Tue Jul 28 10:50:33 PM BST 2026
+============================================================
+
+Best threshold configuration:
+{
+  "method": "masked_normalized_az_policy_entropy",
+  "thresholds": [
+    0.4,
+    0.6,
+    0.8
+  ],
+  "k_options": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "selection_metric": "validation_mean_raw_episode_return",
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/base/training_state_best.pkl",
+  "threshold_values": [
+    0.2,
+    0.4,
+    0.6,
+    0.8
+  ],
+  "num_threshold_candidates": 4,
+  "search_num_episodes": 32,
+  "validation_num_episodes": 64,
+  "top_k_candidates": 4,
+  "eval_meta_steps": 1200,
+  "search_seed_base": 0,
+  "validation_seed_base": 10000,
+  "mcts_seed_offset": 1000000,
+  "validation_mean_return": 1406.40625,
+  "validation_standard_error": 58.92151053852799,
+  "validation_mean_k": 1.1398696772238217,
+  "validation_k_frequencies": [
+    0.9318078496741931,
+    0.02015456887407183,
+    0.024397636005455373,
+    0.023639945446279738
+  ],
+  "validation_completed_fraction": 1.0
+}
+Created output files:
+-rw-r--r--. 1 worc6991 engs-a2i 1012 Jul 28 22:50 /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/entropy_threshold/entropy_thresholds_best.json
+-rw-r--r--. 1 worc6991 engs-a2i 3.4K Jul 28 22:50 /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/entropy_threshold/entropy_threshold_search_results.json
+
+============================================================
+Pac-Man entropy-threshold fitting completed successfully.
+============================================================

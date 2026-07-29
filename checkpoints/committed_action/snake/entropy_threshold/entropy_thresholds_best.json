@@ -1,0 +1,46 @@
+{
+  "environment": "SnakeKT-v1",
+  "thresholds": [
+    0.4,
+    0.6,
+    0.8
+  ],
+  "validation_result": {
+    "thresholds": [
+      0.4,
+      0.6,
+      0.8
+    ],
+    "mean_return": 6.859375,
+    "standard_error": 1.2461980250382068,
+    "mean_k": 3.4149782185559365,
+    "k_frequencies": [
+      0.0785429604226527,
+      0.1230327185095931,
+      0.10332746315691908,
+      0.6950968579108351
+    ],
+    "completed_fraction": 0.859375,
+    "num_episodes": 64
+  },
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/base/training_state_best.pkl",
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "threshold_values": [
+    0.2,
+    0.4,
+    0.6,
+    0.8
+  ],
+  "search_num_episodes": 32,
+  "validation_num_episodes": 64,
+  "top_k_candidates": 2,
+  "eval_meta_steps": 1200,
+  "search_seed_base": 0,
+  "validation_seed_base": 10000,
+  "mcts_seed_offset": 1000000
+}

@@ -1,0 +1,36 @@
+{
+  "environment": "SnakeKT-v1",
+  "threshold_path": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/entropy_threshold/entropy_thresholds_best.json",
+  "thresholds": [
+    0.4,
+    0.6,
+    0.8
+  ],
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/base/training_state_best.pkl",
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "num_episodes": 100,
+  "eval_meta_steps": 1200,
+  "evaluation_seed_base": 20000,
+  "mcts_seed_offset": 1000000,
+  "results": [
+    {
+      "method": "entropy",
+      "mean_return": 8.29,
+      "standard_error": 1.032139584170727,
+      "mean_k": 3.412557444852941,
+      "k_frequencies": [
+        0.09725413602941177,
+        0.11059283088235294,
+        0.07449448529411765,
+        0.7176585477941176
+      ],
+      "completed_fraction": 0.85,
+      "num_episodes": 100
+    }
+  ]
+}

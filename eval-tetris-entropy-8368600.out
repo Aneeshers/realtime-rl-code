@@ -1,0 +1,203 @@
+============================================================
+Repository setup
+============================================================
+REPO_ROOT=/data/engs-a2i/worc6991/realtime-rl-code
+PWD=/data/engs-a2i/worc6991/realtime-rl-code
+SLURM_SUBMIT_DIR=/data/engs-a2i/worc6991/realtime-rl-code
+SCRIPT_ARG_ZERO=/var/spool/slurmd/job8368600/slurm_script
+
+Python executable: /data/engs-a2i/worc6991/conda/envs/realtime_rl/bin/python
+JAX version: 0.6.2
+Hostname: htc-g069
+SLURM_JOB_ID=8368600
+SLURM_NODELIST=htc-g069
+CUDA_VISIBLE_DEVICES=0
+Wed Jul 29 00:42:41 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.65.06              Driver Version: 580.65.06      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L40S                    On  |   00000000:61:00.0 Off |                    0 |
+| N/A   26C    P8             35W /  350W |       0MiB /  46068MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+JAX devices: [CudaDevice(id=0)]
+JAX default backend: gpu
+============================================================
+Tetris entropy-only evaluation configuration
+============================================================
+AZ_CHECKPOINT=/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/base/training_state_best.pkl
+THRESHOLD_PATH=/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/entropy_threshold/entropy_thresholds_best.json
+OUTPUT_PATH=/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/entropy_threshold/evaluation_entropy_final.json
+NUM_EPISODES=100
+EVAL_META_STEPS=1200
+EVALUATION_SEED_BASE=20000
+MCTS_SEED_OFFSET=1000000
+
+{
+  "environment": "TetrisRTKT-v1",
+  "thresholds": [
+    0.2,
+    0.4,
+    0.6
+  ],
+  "validation_result": {
+    "thresholds": [
+      0.2,
+      0.4,
+      0.6
+    ],
+    "mean_return": 2.5,
+    "standard_error": 1.7390208591006309,
+    "mean_k": 3.852913968547641,
+    "k_frequencies": [
+      0.037927844588344126,
+      0.005550416281221091,
+      0.022201665124884366,
+      0.9343200740055504
+    ],
+    "completed_fraction": 1.0,
+    "num_episodes": 32
+  },
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/base/training_state_best.pkl",
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "threshold_values": [
+    0.2,
+    0.4,
+    0.6,
+    0.8
+  ],
+  "search_num_episodes": 16,
+  "validation_num_episodes": 32,
+  "top_k_candidates": 2,
+  "eval_meta_steps": 1200,
+  "search_seed_base": 0,
+  "validation_seed_base": 10000,
+  "mcts_seed_offset": 1000000
+}
+Start time: Wed Jul 29 12:43:03 AM BST 2026
+Evaluation result:
+{
+  "environment": "TetrisRTKT-v1",
+  "threshold_path": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/entropy_threshold/entropy_thresholds_best.json",
+  "thresholds": [
+    0.2,
+    0.4,
+    0.6
+  ],
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/base/training_state_best.pkl",
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "num_episodes": 100,
+  "eval_meta_steps": 1200,
+  "evaluation_seed_base": 20000,
+  "mcts_seed_offset": 1000000,
+  "results": [
+    {
+      "method": "entropy",
+      "mean_return": 1.2,
+      "standard_error": 0.6857864319910612,
+      "mean_k": 3.837503768465481,
+      "k_frequencies": [
+        0.0413023816701839,
+        0.005426590292432921,
+        0.027735905939101597,
+        0.9255351220982816
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    },
+    {
+      "method": "always_k1",
+      "mean_return": 18.8,
+      "standard_error": 2.633429227252841,
+      "mean_k": 1.0,
+      "k_frequencies": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    },
+    {
+      "method": "always_k2",
+      "mean_return": 4.0,
+      "standard_error": 1.2060453783110545,
+      "mean_k": 2.0,
+      "k_frequencies": [
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    },
+    {
+      "method": "always_k3",
+      "mean_return": 2.0,
+      "standard_error": 0.8761716542303611,
+      "mean_k": 3.0,
+      "k_frequencies": [
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    },
+    {
+      "method": "always_k4",
+      "mean_return": 2.0,
+      "standard_error": 0.8761716542303611,
+      "mean_k": 4.0,
+      "k_frequencies": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    },
+    {
+      "method": "random_k",
+      "mean_return": 2.4,
+      "standard_error": 0.9547330263037681,
+      "mean_k": 2.470221457751021,
+      "k_frequencies": [
+        0.2560739625886906,
+        0.25693399268974415,
+        0.2476886691034186,
+        0.23930337561814663
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    }
+  ]
+}
+-rw-r--r--. 1 worc6991 engs-a2i 2.4K Jul 29 01:59 /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/entropy_threshold/evaluation_entropy_final.json
+Tetris entropy-policy evaluation completed successfully at Wed Jul 29 01:59:14 AM BST 2026.

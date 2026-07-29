@@ -1,0 +1,106 @@
+{
+  "environment": "TetrisRTKT-v1",
+  "threshold_path": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/entropy_threshold/entropy_thresholds_best.json",
+  "thresholds": [
+    0.2,
+    0.4,
+    0.6
+  ],
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/base/training_state_best.pkl",
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "num_episodes": 100,
+  "eval_meta_steps": 1200,
+  "evaluation_seed_base": 20000,
+  "mcts_seed_offset": 1000000,
+  "results": [
+    {
+      "method": "entropy",
+      "mean_return": 1.2,
+      "standard_error": 0.6857864319910612,
+      "mean_k": 3.837503768465481,
+      "k_frequencies": [
+        0.0413023816701839,
+        0.005426590292432921,
+        0.027735905939101597,
+        0.9255351220982816
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    },
+    {
+      "method": "always_k1",
+      "mean_return": 18.8,
+      "standard_error": 2.633429227252841,
+      "mean_k": 1.0,
+      "k_frequencies": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    },
+    {
+      "method": "always_k2",
+      "mean_return": 4.0,
+      "standard_error": 1.2060453783110545,
+      "mean_k": 2.0,
+      "k_frequencies": [
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    },
+    {
+      "method": "always_k3",
+      "mean_return": 2.0,
+      "standard_error": 0.8761716542303611,
+      "mean_k": 3.0,
+      "k_frequencies": [
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    },
+    {
+      "method": "always_k4",
+      "mean_return": 2.0,
+      "standard_error": 0.8761716542303611,
+      "mean_k": 4.0,
+      "k_frequencies": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    },
+    {
+      "method": "random_k",
+      "mean_return": 2.4,
+      "standard_error": 0.9547330263037681,
+      "mean_k": 2.470221457751021,
+      "k_frequencies": [
+        0.2560739625886906,
+        0.25693399268974415,
+        0.2476886691034186,
+        0.23930337561814663
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+============================================================
+Repository setup
+============================================================
+REPO_ROOT=/data/engs-a2i/worc6991/realtime-rl-code
+PWD=/data/engs-a2i/worc6991/realtime-rl-code
+SLURM_SUBMIT_DIR=/data/engs-a2i/worc6991/realtime-rl-code
+SCRIPT_ARG_ZERO=/var/spool/slurmd/job8368622/slurm_script
+
+============================================================
+Python environment
+============================================================
+ENV_PY=/data/engs-a2i/worc6991/conda/envs/realtime_rl/bin/python
+Python executable: /data/engs-a2i/worc6991/conda/envs/realtime_rl/bin/python
+JAX version: 0.6.2
+
+============================================================
+Slurm job information
+============================================================
+Hostname: htc-g082
+SLURM_JOB_ID=8368622
+SLURM_NODELIST=htc-g082
+CUDA_VISIBLE_DEVICES=0
+
+Wed Jul 29 00:44:36 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.65.06              Driver Version: 580.65.06      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L40S                    On  |   00000000:61:00.0 Off |                    0 |
+| N/A   24C    P8             33W /  350W |       0MiB /  46068MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+
+============================================================
+JAX device check
+============================================================
+JAX devices: [CudaDevice(id=0)]
+JAX default backend: gpu
+
+============================================================
+Entropy-policy evaluation configuration
+============================================================
+AZ_CHECKPOINT=/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/base/training_state_best.pkl
+THRESHOLD_PATH=/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/entropy_threshold/entropy_thresholds_best.json
+OUTPUT_PATH=/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/entropy_threshold/evaluation_entropy_final.json
+
+NUM_EPISODES=100
+EVAL_META_STEPS=1200
+EVALUATION_SEED_BASE=20000
+MCTS_SEED_OFFSET=1000000
+
+Evaluation mode:
+  entropy policy only
+  fixed-K baselines skipped
+  random-K baseline skipped
+============================================================
+
+Threshold configuration:
+{
+  "method": "masked_normalized_az_policy_entropy",
+  "thresholds": [
+    0.4,
+    0.6,
+    0.8
+  ],
+  "k_options": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "selection_metric": "validation_mean_raw_episode_return",
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/base/training_state_best.pkl",
+  "threshold_values": [
+    0.2,
+    0.4,
+    0.6,
+    0.8
+  ],
+  "num_threshold_candidates": 4,
+  "search_num_episodes": 32,
+  "validation_num_episodes": 64,
+  "top_k_candidates": 4,
+  "eval_meta_steps": 1200,
+  "search_seed_base": 0,
+  "validation_seed_base": 10000,
+  "mcts_seed_offset": 1000000,
+  "validation_mean_return": 1406.40625,
+  "validation_standard_error": 58.92151053852799,
+  "validation_mean_k": 1.1398696772238217,
+  "validation_k_frequencies": [
+    0.9318078496741931,
+    0.02015456887407183,
+    0.024397636005455373,
+    0.023639945446279738
+  ],
+  "validation_completed_fraction": 1.0
+}
+============================================================
+Starting Pac-Man entropy-policy evaluation
+Start time: Wed Jul 29 12:44:58 AM BST 2026
+============================================================
+
+
+============================================================
+Entropy-policy evaluation command finished
+End time: Wed Jul 29 02:24:50 AM BST 2026
+============================================================
+
+Evaluation result:
+{
+  "threshold_path": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/entropy_threshold/entropy_thresholds_best.json",
+  "thresholds": [
+    0.4,
+    0.6,
+    0.8
+  ],
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/base/training_state_best.pkl",
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "num_episodes": 100,
+  "eval_meta_steps": 1200,
+  "evaluation_seed_base": 20000,
+  "mcts_seed_offset": 1000000,
+  "results": [
+    {
+      "method": "entropy",
+      "mean_return": 1396.8,
+      "standard_error": 46.26229129603932,
+      "mean_k": 1.1407194244604317,
+      "k_frequencies": [
+        0.9315107913669065,
+        0.020719424460431655,
+        0.02330935251798561,
+        0.02446043165467626
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    }
+  ]
+}
+Created output file:
+-rw-r--r--. 1 worc6991 engs-a2i 878 Jul 29 02:24 /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/entropy_threshold/evaluation_entropy_final.json
+
+============================================================
+Pac-Man entropy-policy evaluation completed successfully.
+============================================================

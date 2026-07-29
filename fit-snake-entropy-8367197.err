@@ -1,0 +1,45 @@
+=============================================================================
+This module includes execution of the conda shell function.
+There is no need to run conda init. For more details, see:
+https://arc-software-guide.readthedocs.io/en/latest/python/anaconda_venv.html
+=============================================================================
+2026-07-28 16:56:22,152 INFO JAX devices: [CudaDevice(id=0)]
+2026-07-28 16:56:22,152 INFO Loading frozen AZNet from: /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/base/training_state_best.pkl
+2026-07-28 16:56:22,634 INFO Loaded AZNet checkpoint from: /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/base/training_state_best.pkl
+2026-07-28 16:56:25,583 INFO Loaded AZNet checkpoint from: /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/base/training_state_best.pkl
+2026-07-28 16:56:25,584 INFO Generated 4 ordered threshold triples from [0.2, 0.4, 0.6, 0.8].
+2026-07-28 16:56:26,088 INFO Created agent: K=1, sims=32
+2026-07-28 16:56:26,088 INFO Created agent: K=2, sims=64
+2026-07-28 16:56:26,088 INFO Created agent: K=3, sims=96
+2026-07-28 16:56:26,089 INFO Created agent: K=4, sims=128
+2026-07-28 16:56:26,113 INFO Starting coarse search: 4 candidates x 32 episodes.
+2026-07-28 16:56:35.759535: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-28 16:56:35.759580: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-28 16:56:35.759589: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-28 16:56:35.759596: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-28 16:56:35.759613: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-28 17:10:03,425 INFO Coarse 1/4 thresholds=(0.2, 0.4, 0.6) return=4.906 mean_K=3.772 completed=93.8%
+2026-07-28 17:22:52,114 INFO Coarse 2/4 thresholds=(0.2, 0.4, 0.8) return=5.844 mean_K=3.723 completed=96.9%
+2026-07-28 17:35:34,131 INFO Coarse 3/4 thresholds=(0.2, 0.6, 0.8) return=5.500 mean_K=3.708 completed=96.9%
+2026-07-28 17:48:23,781 INFO Coarse 4/4 thresholds=(0.4, 0.6, 0.8) return=6.094 mean_K=3.606 completed=96.9%
+2026-07-28 17:48:23,803 INFO Top 2 coarse-search candidates:
+2026-07-28 17:48:23,803 INFO coarse rank=1 thresholds=(0.4, 0.6, 0.8) return=6.094 +/- 1.651 mean_K=3.606 K_freq=[6.7, 7.1, 5.2, 81.0] completed=96.9%
+2026-07-28 17:48:23,803 INFO coarse rank=2 thresholds=(0.2, 0.4, 0.8) return=5.844 +/- 1.507 mean_K=3.723 K_freq=[3.3, 4.0, 9.7, 82.9] completed=96.9%
+2026-07-28 17:48:23,807 INFO Created agent: K=1, sims=32
+2026-07-28 17:48:23,807 INFO Created agent: K=2, sims=64
+2026-07-28 17:48:23,807 INFO Created agent: K=3, sims=96
+2026-07-28 17:48:23,808 INFO Created agent: K=4, sims=128
+2026-07-28 17:48:24,242 INFO Starting validation: 2 candidates x 64 episodes.
+2026-07-28 17:48:33.095079: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-28 17:48:33.095127: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-28 17:48:33.095136: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-28 17:48:33.095144: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-28 17:48:33.095165: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-28 18:06:06,919 INFO Validation 1/2 thresholds=(0.4, 0.6, 0.8) return=6.859 mean_K=3.415 completed=85.9%
+2026-07-28 18:23:13,599 INFO Validation 2/2 thresholds=(0.2, 0.4, 0.8) return=6.766 mean_K=3.571 completed=87.5%
+2026-07-28 18:23:13,599 INFO Validation ranking:
+2026-07-28 18:23:13,599 INFO validation rank=1 thresholds=(0.4, 0.6, 0.8) return=6.859 +/- 1.246 mean_K=3.415 K_freq=[7.9, 12.3, 10.3, 69.5] completed=85.9%
+2026-07-28 18:23:13,599 INFO validation rank=2 thresholds=(0.2, 0.4, 0.8) return=6.766 +/- 1.077 mean_K=3.571 K_freq=[4.3, 6.0, 17.9, 71.8] completed=87.5%
+2026-07-28 18:23:13,692 INFO Saved best thresholds to: /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/entropy_threshold/entropy_thresholds_best.json
+2026-07-28 18:23:13,694 INFO Saved complete search results to: /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/entropy_threshold/entropy_threshold_search_results.json
+2026-07-28 18:23:13,694 INFO Best thresholds=(0.4, 0.6, 0.8) return=6.859 +/- 1.246 mean_K=3.415 K_freq=[7.9, 12.3, 10.3, 69.5] completed=85.9%

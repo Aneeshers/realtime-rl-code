@@ -1,0 +1,46 @@
+{
+  "environment": "TetrisRTKT-v1",
+  "thresholds": [
+    0.2,
+    0.4,
+    0.6
+  ],
+  "validation_result": {
+    "thresholds": [
+      0.2,
+      0.4,
+      0.6
+    ],
+    "mean_return": 2.5,
+    "standard_error": 1.7390208591006309,
+    "mean_k": 3.852913968547641,
+    "k_frequencies": [
+      0.037927844588344126,
+      0.005550416281221091,
+      0.022201665124884366,
+      0.9343200740055504
+    ],
+    "completed_fraction": 1.0,
+    "num_episodes": 32
+  },
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/base/training_state_best.pkl",
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "threshold_values": [
+    0.2,
+    0.4,
+    0.6,
+    0.8
+  ],
+  "search_num_episodes": 16,
+  "validation_num_episodes": 32,
+  "top_k_candidates": 2,
+  "eval_meta_steps": 1200,
+  "search_seed_base": 0,
+  "validation_seed_base": 10000,
+  "mcts_seed_offset": 1000000
+}

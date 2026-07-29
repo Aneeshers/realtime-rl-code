@@ -1,0 +1,100 @@
+============================================================
+Repository setup
+============================================================
+REPO_ROOT=/data/engs-a2i/worc6991/realtime-rl-code
+PWD=/data/engs-a2i/worc6991/realtime-rl-code
+SLURM_SUBMIT_DIR=/data/engs-a2i/worc6991/realtime-rl-code
+SCRIPT_ARG_ZERO=/var/spool/slurmd/job8367196/slurm_script
+
+Python executable: /data/engs-a2i/worc6991/conda/envs/realtime_rl/bin/python
+JAX version: 0.6.2
+Hostname: htc-g073
+SLURM_JOB_ID=8367196
+SLURM_NODELIST=htc-g073
+CUDA_VISIBLE_DEVICES=0
+Tue Jul 28 16:54:07 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.65.06              Driver Version: 580.65.06      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L40S                    On  |   00000000:4A:00.0 Off |                    0 |
+| N/A   26C    P8             34W /  350W |       0MiB /  46068MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+JAX devices: [CudaDevice(id=0)]
+JAX default backend: gpu
+============================================================
+Tetris entropy-threshold fitting configuration
+============================================================
+AZ_CHECKPOINT=/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/base/training_state_best.pkl
+OUTPUT_DIR=/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/entropy_threshold
+SEARCH_NUM_EPISODES=16
+VALIDATION_NUM_EPISODES=32
+TOP_K_CANDIDATES=2
+EVAL_META_STEPS=1200
+SIM_OPTIONS=32 64 96 128
+THRESHOLD_GRID=0.2 0.4 0.6 0.8
+CANDIDATES=C(4,3)=4
+
+Start time: Tue Jul 28 04:54:51 PM BST 2026
+Best threshold configuration:
+{
+  "environment": "TetrisRTKT-v1",
+  "thresholds": [
+    0.2,
+    0.4,
+    0.6
+  ],
+  "validation_result": {
+    "thresholds": [
+      0.2,
+      0.4,
+      0.6
+    ],
+    "mean_return": 2.5,
+    "standard_error": 1.7390208591006309,
+    "mean_k": 3.852913968547641,
+    "k_frequencies": [
+      0.037927844588344126,
+      0.005550416281221091,
+      0.022201665124884366,
+      0.9343200740055504
+    ],
+    "completed_fraction": 1.0,
+    "num_episodes": 32
+  },
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/base/training_state_best.pkl",
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "threshold_values": [
+    0.2,
+    0.4,
+    0.6,
+    0.8
+  ],
+  "search_num_episodes": 16,
+  "validation_num_episodes": 32,
+  "top_k_candidates": 2,
+  "eval_meta_steps": 1200,
+  "search_seed_base": 0,
+  "validation_seed_base": 10000,
+  "mcts_seed_offset": 1000000
+}
+-rw-r--r--. 1 worc6991 engs-a2i 927 Jul 28 17:34 /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/entropy_threshold/entropy_thresholds_best.json
+-rw-r--r--. 1 worc6991 engs-a2i 5.5K Jul 28 17:34 /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/tetris_rt/entropy_threshold/entropy_threshold_search_results.json
+Tetris entropy-threshold fitting completed successfully at Tue Jul 28 05:34:50 PM BST 2026.

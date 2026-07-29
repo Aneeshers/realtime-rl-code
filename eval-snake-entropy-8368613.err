@@ -1,0 +1,24 @@
+=============================================================================
+This module includes execution of the conda shell function.
+There is no need to run conda init. For more details, see:
+https://arc-software-guide.readthedocs.io/en/latest/python/anaconda_venv.html
+=============================================================================
+2026-07-29 00:45:38,843 INFO JAX devices: [CudaDevice(id=0)]
+2026-07-29 00:45:38,843 INFO Threshold file: /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/entropy_threshold/entropy_thresholds_best.json
+2026-07-29 00:45:38,843 INFO Thresholds: [0.4, 0.6, 0.8]
+2026-07-29 00:45:38,843 INFO Simulation options: [32, 64, 96, 128]
+2026-07-29 00:45:38,843 INFO Loading frozen AZNet from: /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/base/training_state_best.pkl
+2026-07-29 00:45:40,073 INFO Loaded AZNet checkpoint from: /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/base/training_state_best.pkl
+2026-07-29 00:45:44,708 INFO Created agent: K=1, sims=32
+2026-07-29 00:45:44,708 INFO Created agent: K=2, sims=64
+2026-07-29 00:45:44,709 INFO Created agent: K=3, sims=96
+2026-07-29 00:45:44,709 INFO Created agent: K=4, sims=128
+2026-07-29 00:45:54.458572: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-29 00:45:54.458614: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-29 00:45:54.458622: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-29 00:45:54.458631: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-29 00:45:54.458658: W external/xla/xla/service/gpu/autotuning/dot_search_space.cc:200] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs?Working around this by using the full hints set instead.
+2026-07-29 01:06:46,095 INFO entropy        return=8.290 +/- 1.032 mean_K=3.413 K_freq=[9.7, 11.1, 7.4, 71.8] completed=85.0%
+2026-07-29 01:06:46,208 WARNING 1 method(s) had incomplete episodes within 1200 meta-steps. Increase --eval_meta_steps before reporting final results.
+2026-07-29 01:06:46,557 INFO Saved evaluation results to: /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/entropy_threshold/evaluation_entropy_final.json
+2026-07-29 01:06:46,557 INFO Evaluation complete.

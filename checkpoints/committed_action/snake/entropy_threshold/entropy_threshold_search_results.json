@@ -1,0 +1,270 @@
+{
+  "environment": "SnakeKT-v1",
+  "thresholds": [
+    0.4,
+    0.6,
+    0.8
+  ],
+  "validation_result": {
+    "thresholds": [
+      0.4,
+      0.6,
+      0.8
+    ],
+    "mean_return": 6.859375,
+    "standard_error": 1.2461980250382068,
+    "mean_k": 3.4149782185559365,
+    "k_frequencies": [
+      0.0785429604226527,
+      0.1230327185095931,
+      0.10332746315691908,
+      0.6950968579108351
+    ],
+    "completed_fraction": 0.859375,
+    "num_episodes": 64
+  },
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/base/training_state_best.pkl",
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "threshold_values": [
+    0.2,
+    0.4,
+    0.6,
+    0.8
+  ],
+  "search_num_episodes": 32,
+  "validation_num_episodes": 64,
+  "top_k_candidates": 2,
+  "eval_meta_steps": 1200,
+  "search_seed_base": 0,
+  "validation_seed_base": 10000,
+  "mcts_seed_offset": 1000000,
+  "coarse_results": [
+    {
+      "thresholds": [
+        0.2,
+        0.4,
+        0.6
+      ],
+      "mean_return": 4.90625,
+      "standard_error": 1.3958170336875309,
+      "mean_k": 3.77220603960031,
+      "k_frequencies": [
+        0.03148851443530843,
+        0.048560156336418275,
+        0.03620810442092843,
+        0.8837432248073449
+      ],
+      "completed_fraction": 0.9375,
+      "num_episodes": 32
+    },
+    {
+      "thresholds": [
+        0.2,
+        0.4,
+        0.8
+      ],
+      "mean_return": 5.84375,
+      "standard_error": 1.5067786182566714,
+      "mean_k": 3.7232782118844265,
+      "k_frequencies": [
+        0.033036525531528256,
+        0.04008722514991823,
+        0.0974377612211521,
+        0.8294384880974014
+      ],
+      "completed_fraction": 0.96875,
+      "num_episodes": 32
+    },
+    {
+      "thresholds": [
+        0.2,
+        0.6,
+        0.8
+      ],
+      "mean_return": 5.5,
+      "standard_error": 1.443142851668739,
+      "mean_k": 3.7082556544373704,
+      "k_frequencies": [
+        0.015864082451018325,
+        0.10566674874248128,
+        0.03281860072461219,
+        0.8456505680818882
+      ],
+      "completed_fraction": 0.96875,
+      "num_episodes": 32
+    },
+    {
+      "thresholds": [
+        0.4,
+        0.6,
+        0.8
+      ],
+      "mean_return": 6.09375,
+      "standard_error": 1.650610453423706,
+      "mean_k": 3.6058700925957563,
+      "k_frequencies": [
+        0.066832951788704,
+        0.07086479652851334,
+        0.051901458981105,
+        0.8104007927016776
+      ],
+      "completed_fraction": 0.96875,
+      "num_episodes": 32
+    }
+  ],
+  "coarse_ranking": [
+    {
+      "thresholds": [
+        0.4,
+        0.6,
+        0.8
+      ],
+      "mean_return": 6.09375,
+      "standard_error": 1.650610453423706,
+      "mean_k": 3.6058700925957563,
+      "k_frequencies": [
+        0.066832951788704,
+        0.07086479652851334,
+        0.051901458981105,
+        0.8104007927016776
+      ],
+      "completed_fraction": 0.96875,
+      "num_episodes": 32
+    },
+    {
+      "thresholds": [
+        0.2,
+        0.4,
+        0.8
+      ],
+      "mean_return": 5.84375,
+      "standard_error": 1.5067786182566714,
+      "mean_k": 3.7232782118844265,
+      "k_frequencies": [
+        0.033036525531528256,
+        0.04008722514991823,
+        0.0974377612211521,
+        0.8294384880974014
+      ],
+      "completed_fraction": 0.96875,
+      "num_episodes": 32
+    },
+    {
+      "thresholds": [
+        0.2,
+        0.6,
+        0.8
+      ],
+      "mean_return": 5.5,
+      "standard_error": 1.443142851668739,
+      "mean_k": 3.7082556544373704,
+      "k_frequencies": [
+        0.015864082451018325,
+        0.10566674874248128,
+        0.03281860072461219,
+        0.8456505680818882
+      ],
+      "completed_fraction": 0.96875,
+      "num_episodes": 32
+    },
+    {
+      "thresholds": [
+        0.2,
+        0.4,
+        0.6
+      ],
+      "mean_return": 4.90625,
+      "standard_error": 1.3958170336875309,
+      "mean_k": 3.77220603960031,
+      "k_frequencies": [
+        0.03148851443530843,
+        0.048560156336418275,
+        0.03620810442092843,
+        0.8837432248073449
+      ],
+      "completed_fraction": 0.9375,
+      "num_episodes": 32
+    }
+  ],
+  "validation_results": [
+    {
+      "thresholds": [
+        0.4,
+        0.6,
+        0.8
+      ],
+      "mean_return": 6.859375,
+      "standard_error": 1.2461980250382068,
+      "mean_k": 3.4149782185559365,
+      "k_frequencies": [
+        0.0785429604226527,
+        0.1230327185095931,
+        0.10332746315691908,
+        0.6950968579108351
+      ],
+      "completed_fraction": 0.859375,
+      "num_episodes": 64
+    },
+    {
+      "thresholds": [
+        0.2,
+        0.4,
+        0.8
+      ],
+      "mean_return": 6.765625,
+      "standard_error": 1.0770749141929405,
+      "mean_k": 3.5708437198638983,
+      "k_frequencies": [
+        0.04321403227860769,
+        0.06039047289797849,
+        0.1787332375043214,
+        0.7176622573190924
+      ],
+      "completed_fraction": 0.875,
+      "num_episodes": 64
+    }
+  ],
+  "validation_ranking": [
+    {
+      "thresholds": [
+        0.4,
+        0.6,
+        0.8
+      ],
+      "mean_return": 6.859375,
+      "standard_error": 1.2461980250382068,
+      "mean_k": 3.4149782185559365,
+      "k_frequencies": [
+        0.0785429604226527,
+        0.1230327185095931,
+        0.10332746315691908,
+        0.6950968579108351
+      ],
+      "completed_fraction": 0.859375,
+      "num_episodes": 64
+    },
+    {
+      "thresholds": [
+        0.2,
+        0.4,
+        0.8
+      ],
+      "mean_return": 6.765625,
+      "standard_error": 1.0770749141929405,
+      "mean_k": 3.5708437198638983,
+      "k_frequencies": [
+        0.04321403227860769,
+        0.06039047289797849,
+        0.1787332375043214,
+        0.7176622573190924
+      ],
+      "completed_fraction": 0.875,
+      "num_episodes": 64
+    }
+  ]
+}

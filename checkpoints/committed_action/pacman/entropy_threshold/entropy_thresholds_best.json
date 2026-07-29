@@ -1,0 +1,46 @@
+{
+  "method": "masked_normalized_az_policy_entropy",
+  "thresholds": [
+    0.4,
+    0.6,
+    0.8
+  ],
+  "k_options": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "selection_metric": "validation_mean_raw_episode_return",
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/base/training_state_best.pkl",
+  "threshold_values": [
+    0.2,
+    0.4,
+    0.6,
+    0.8
+  ],
+  "num_threshold_candidates": 4,
+  "search_num_episodes": 32,
+  "validation_num_episodes": 64,
+  "top_k_candidates": 4,
+  "eval_meta_steps": 1200,
+  "search_seed_base": 0,
+  "validation_seed_base": 10000,
+  "mcts_seed_offset": 1000000,
+  "validation_mean_return": 1406.40625,
+  "validation_standard_error": 58.92151053852799,
+  "validation_mean_k": 1.1398696772238217,
+  "validation_k_frequencies": [
+    0.9318078496741931,
+    0.02015456887407183,
+    0.024397636005455373,
+    0.023639945446279738
+  ],
+  "validation_completed_fraction": 1.0
+}

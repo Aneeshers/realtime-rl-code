@@ -1,0 +1,133 @@
+============================================================
+Repository setup
+============================================================
+REPO_ROOT=/data/engs-a2i/worc6991/realtime-rl-code
+PWD=/data/engs-a2i/worc6991/realtime-rl-code
+SLURM_SUBMIT_DIR=/data/engs-a2i/worc6991/realtime-rl-code
+SCRIPT_ARG_ZERO=/var/spool/slurmd/job8368613/slurm_script
+
+Python executable: /data/engs-a2i/worc6991/conda/envs/realtime_rl/bin/python
+JAX version: 0.6.2
+Hostname: htc-g080
+SLURM_JOB_ID=8368613
+SLURM_NODELIST=htc-g080
+CUDA_VISIBLE_DEVICES=0
+Wed Jul 29 00:43:19 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.65.06              Driver Version: 580.65.06      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L40S                    On  |   00000000:4A:00.0 Off |                    0 |
+| N/A   24C    P8             35W /  350W |       0MiB /  46068MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+JAX devices: [CudaDevice(id=0)]
+JAX default backend: gpu
+============================================================
+Snake entropy-only evaluation configuration
+============================================================
+AZ_CHECKPOINT=/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/base/training_state_best.pkl
+THRESHOLD_PATH=/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/entropy_threshold/entropy_thresholds_best.json
+OUTPUT_PATH=/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/entropy_threshold/evaluation_entropy_final.json
+NUM_EPISODES=100
+EVAL_META_STEPS=1200
+EVALUATION_SEED_BASE=20000
+MCTS_SEED_OFFSET=1000000
+
+{
+  "environment": "SnakeKT-v1",
+  "thresholds": [
+    0.4,
+    0.6,
+    0.8
+  ],
+  "validation_result": {
+    "thresholds": [
+      0.4,
+      0.6,
+      0.8
+    ],
+    "mean_return": 6.859375,
+    "standard_error": 1.2461980250382068,
+    "mean_k": 3.4149782185559365,
+    "k_frequencies": [
+      0.0785429604226527,
+      0.1230327185095931,
+      0.10332746315691908,
+      0.6950968579108351
+    ],
+    "completed_fraction": 0.859375,
+    "num_episodes": 64
+  },
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/base/training_state_best.pkl",
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "threshold_values": [
+    0.2,
+    0.4,
+    0.6,
+    0.8
+  ],
+  "search_num_episodes": 32,
+  "validation_num_episodes": 64,
+  "top_k_candidates": 2,
+  "eval_meta_steps": 1200,
+  "search_seed_base": 0,
+  "validation_seed_base": 10000,
+  "mcts_seed_offset": 1000000
+}
+Start time: Wed Jul 29 12:44:35 AM BST 2026
+Evaluation result:
+{
+  "environment": "SnakeKT-v1",
+  "threshold_path": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/entropy_threshold/entropy_thresholds_best.json",
+  "thresholds": [
+    0.4,
+    0.6,
+    0.8
+  ],
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/base/training_state_best.pkl",
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "num_episodes": 100,
+  "eval_meta_steps": 1200,
+  "evaluation_seed_base": 20000,
+  "mcts_seed_offset": 1000000,
+  "results": [
+    {
+      "method": "entropy",
+      "mean_return": 8.29,
+      "standard_error": 1.032139584170727,
+      "mean_k": 3.412557444852941,
+      "k_frequencies": [
+        0.09725413602941177,
+        0.11059283088235294,
+        0.07449448529411765,
+        0.7176585477941176
+      ],
+      "completed_fraction": 0.85,
+      "num_episodes": 100
+    }
+  ]
+}
+-rw-r--r--. 1 worc6991 engs-a2i 904 Jul 29 01:06 /data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/snake/entropy_threshold/evaluation_entropy_final.json
+Snake entropy-policy evaluation completed successfully at Wed Jul 29 01:06:51 AM BST 2026.

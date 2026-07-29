@@ -1,0 +1,35 @@
+{
+  "threshold_path": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/entropy_threshold/entropy_thresholds_best.json",
+  "thresholds": [
+    0.4,
+    0.6,
+    0.8
+  ],
+  "az_checkpoint_source": "/data/engs-a2i/worc6991/realtime-rl-code/checkpoints/committed_action/pacman/base/training_state_best.pkl",
+  "sim_options": [
+    32,
+    64,
+    96,
+    128
+  ],
+  "num_episodes": 100,
+  "eval_meta_steps": 1200,
+  "evaluation_seed_base": 20000,
+  "mcts_seed_offset": 1000000,
+  "results": [
+    {
+      "method": "entropy",
+      "mean_return": 1396.8,
+      "standard_error": 46.26229129603932,
+      "mean_k": 1.1407194244604317,
+      "k_frequencies": [
+        0.9315107913669065,
+        0.020719424460431655,
+        0.02330935251798561,
+        0.02446043165467626
+      ],
+      "completed_fraction": 1.0,
+      "num_episodes": 100
+    }
+  ]
+}
