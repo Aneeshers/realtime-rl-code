@@ -1,5 +1,5 @@
 <h1 align="center">Finding the Time to Think in Real-Time RL</h1>
-<h3 align="center">NeurIPS 2026</h3>
+<h3 align="center">Accepted to NeurIPS 2026</h3>
 
 <p align="center">
   <a href="https://aneeshers.github.io">Aneesh Muppidi</a><sup>*</sup> &nbsp;&middot;&nbsp;
@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://neurips.cc/Conferences/2026">
-    <img src="https://img.shields.io/badge/NeurIPS-2026-6f42c1?style=for-the-badge" alt="NeurIPS 2026"></a>
+    <img src="https://img.shields.io/badge/Accepted-NeurIPS%202026-6f42c1?style=for-the-badge" alt="Accepted to NeurIPS 2026"></a>
   &nbsp;
   <a href="https://aneeshers.github.io/realtime-rl/">
     <img src="https://img.shields.io/badge/Project-Website-2c6fad?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Project Website"></a>
